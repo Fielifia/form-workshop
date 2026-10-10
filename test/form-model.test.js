@@ -62,7 +62,7 @@ test('supports optional fields', () => {
 test('stores field validation rules independently', () => {
   const form = createFormModel()
   const rules = ['email']
-  form.addField(makeField({ ValidationRules: rules }))
+  form.addField(makeField({ validationRules: rules }))
 
   rules.push('required')
 
@@ -100,4 +100,44 @@ test('rejects invalid field configurations', () => {
   )
 
   assert.deepEqual(form.getFields(), [])
+})
+
+test('updates a field without changing its ID', () => {
+  const form = createFormModel()
+  form.addField(makeField())
+
+  assert.equal(
+    form.updateField('email-field', {
+      label: 'Contact email',
+      required: false
+    }),
+    true
+  )
+
+  assert.deepEqual(form.getFields(), [
+    makeField({
+      label: 'Contact email',
+      required: false
+    })
+  ])
+})
+
+test('returns false when updating a missing field', () => {
+  const form = createFormModel()
+
+  assert.equal(form.updateField('missing', { label: 'New label' }),
+    false
+  )
+})
+
+test('preserves the field when an update is invalid', () => {
+  const form = createFormModel()
+  form.addField(makeField())
+
+  assert.throws(
+    () => form.updateField('email-field', { label: '' }),
+    /non-empty label/
+  )
+
+  assert.deepEqual(form.getFields(), [makeField()])
 })

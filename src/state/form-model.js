@@ -11,13 +11,26 @@ const ALLOWED_FIELD_TYPES = [
 ]
 
 /**
- * Creates a configurable form model.
- * The model is independent of the user interface.
+ * Creates a configurable form model independent of the user interface.
+ * 
+ * The model manages field configuration and provides operations for
+ * adding, removing, retrieving and updating fields.
+ * 
+ * @returns {object} The form model and its public methods.
  */
 export function createFormModel() {
   const fields = []
 
   return {
+
+    /**
+     * Return copies of all configured fields in the form.
+     * 
+     * Each field and its validation rules array are copied so that
+     * changes to the returned data do not affect the model's state.
+     * 
+     * @returns {Array<object>} Copies of the configured fields.
+     */
     getFields() {
       return fields.map(field => ({
         ...field,
@@ -25,6 +38,17 @@ export function createFormModel() {
       }))
     },
 
+    /**
+     * Adds a field to the form model.
+     * 
+     * The field configuration is validated before it is stored.
+     * Field IDs must be unique, and the stored validation rules
+     * are copied from the supplied configuration.
+     * 
+     * @param {object} field - The field configuration to add.
+     * @throws {TypeError} If the field configuration is invalid.
+     * @throws {Error} If a field with the same ID already exists.
+     */
     addField(field) {
       validateField(field)
 
@@ -40,6 +64,12 @@ export function createFormModel() {
       })
     },
 
+    /**
+     * Removes a field from the form model by its ID.
+     * 
+     * @param {string} id - The ID of the field to remove.
+     * @returns {boolean} True if the field was removed, otherwise false.
+     */
     removeField(id) {
       const index = fields.findIndex(field => field.id === id)
 
@@ -50,6 +80,19 @@ export function createFormModel() {
       return true
     },
 
+
+    /**
+     * Updates an existing field without changing its ID.
+     * 
+     * The resulting field configuration is validated before it replaces
+     * the existing field. If validation fails, the existing field remains
+     * unchanged.
+     * 
+     * @param {string} id - The ID of the field to update.
+     * @param {object} fieldChanges - The properties to update.
+     * @returns {boolean} True if the field was updated, otherwise false.
+     * @throws {TypeError} If the resulting field configuration is invalid.
+     */
     updateField(id, fieldChanges) {
       const index = fields.findIndex(field => field.id === id)
 
@@ -66,6 +109,16 @@ export function createFormModel() {
           : fieldChanges.validationRules
       }
 
+      /**
+       * Validates a field configuration.
+       * 
+       * Checks that the field has a valid ID, label, type, required flag
+       * and an array of non-empty validation rule strings.
+       * 
+       * @param {object} field - The field to validate.
+       * @throws {TypeError} If the field is invalid or contains invalid properties.
+       * @returns {void}
+       */
       validateField(updatedField)
 
       fields[index] = {
@@ -105,6 +158,6 @@ function validateField(field) {
   }
 
   if (!field.validationRules.every(rule => typeof rule === 'string' && rule.trim() !== '')) {
-    throw new TypeError('Each validation rule must be non-empty string.')
+    throw new TypeError('Each validation rule must be a non-empty string.')
   }
 }
