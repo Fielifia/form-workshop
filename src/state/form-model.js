@@ -29,7 +29,7 @@ export function createFormModel() {
       validateField(field)
 
       if (fields.some(existing => existing.id === field.id)) {
-        return false
+        throw new Error(`A field with ID "${field.id}" already exists.`)
       }
       fields.push({
         id: field.id,
@@ -39,8 +39,9 @@ export function createFormModel() {
         validationRules: [...field.validationRules]
       })
     },
-    removeField(fieldId) {
-      const index = fields.findIndex(field => field.id === fieldId)
+
+    removeField(id) {
+      const index = fields.findIndex(field => field.id === id)
 
       if (index === -1) {
         return false
@@ -49,8 +50,8 @@ export function createFormModel() {
       return true
     },
 
-    updateField(fieldId, fieldChanges) {
-      const index = fields.findIndex(field => field.id === fieldId)
+    updateField(id, fieldChanges) {
+      const index = fields.findIndex(field => field.id === id)
 
       if (index === -1) {
         return false
@@ -59,7 +60,7 @@ export function createFormModel() {
       const updatedField = {
         ...fields[index],
         ...fieldChanges,
-        fieldId,
+        id,
         validationRules: fieldChanges.validationRules === undefined
           ? [...fields[index].validationRules]
           : fieldChanges.validationRules
@@ -79,7 +80,7 @@ export function createFormModel() {
 }
 
 function validateField(field) {
-  if (!field.id || typeof field !== 'object' || Array.isArray(field)) {
+  if (!field || typeof field !== 'object' || Array.isArray(field)) {
     throw new TypeError('A field must be an object.')
   }
 
@@ -91,19 +92,19 @@ function validateField(field) {
     throw new TypeError('A field must have a non-empty label.')
   }
 
-  if(!ALLOWED_FIELD_TYPES.includes(field.type)) {
+  if (!ALLOWED_FIELD_TYPES.includes(field.type)) {
     throw new TypeError(`Unsupported field type: "${field.type}". A field must have a valid type. Allowed types: ${ALLOWED_FIELD_TYPES.join(', ')}.`)
   }
 
-  if(typeof field.required !== 'boolean') {
+  if (typeof field.required !== 'boolean') {
     throw new TypeError('The required property must be a boolean.')
   }
 
-  if(!Array.isArray(field.validationRules)) {
+  if (!Array.isArray(field.validationRules)) {
     throw new TypeError('Validation rules must be an array.')
   }
 
-  if(!field.validationRules.every(rule => typeof rule === 'string' && rule.trim() !== '')) {
+  if (!field.validationRules.every(rule => typeof rule === 'string' && rule.trim() !== '')) {
     throw new TypeError('Each validation rule must be non-empty string.')
   }
 }
