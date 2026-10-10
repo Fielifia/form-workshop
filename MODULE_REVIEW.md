@@ -47,12 +47,41 @@ The reviewed `package.json` lists ESLint-related dependencies. No external produ
 
 The `PasswordValidator` can be used to validate password fields and provide feedback. Password generation is optional and is not required for the MVP.
 
-## 3. Summary
 
-Both modules use JavaScript ES modules and can be integrated into Form Workshop application.
+## 3. Compatibility and Integration Constraints
 
-The form validation module handles general field validation, while the password module provides password-specific validation. Their responsibilities are complementary.
+Both modules use JavaScript ES modules and can be imported into the Form Workshop application.
 
-The exported HTML form must also perform validation independently of the builder application and without network access. This export requirement must be considered during implementation.
+- The form validation module handles general field validation.
+- The password module handles password-specific validation.
+- The application must adapt the modules' validation results to the user interface.
+- The exported form must not depend on modules or resources loaded from a remote server.
+- The original module implementations and their license notices must be preserved as required by their respective licenses.
 
-Both modules' original license notices must be preserved when required by their respective licenses.
+The modules have different responsibilities and should be used together rather than replacing one another.
+
+## 4. Validation and Export Strategy
+
+### Builder
+
+The builder will use the form validation module for general field validation and the password module for password-specific checks. Validation results will be presented as field-specific feedback.
+
+### Exported HTML
+
+The exported HTML file must contain the markup, styling, and JavaScript required to validate the form independently.
+
+The export implementation must include or embed the required validation logic rather than relying on the builder application or network-loaded dependencies. The exported form must enforce equivalent configured validation rules to the builder preview.
+
+### Limitations
+
+The exported form will perform client-side validation only. It will not submit data to a server or persist form responses.
+
+The exact export implementation must be verified through testing to ensure that the exported file works without a network connection.
+
+## 5. Summary
+
+The form validation module handles general field validation, while the password module provides password-specific validation.
+
+The planned integration keeps these responsibilities separate and adapts their results for the builder interface. The exported HTML must contain the resources and validation logic needed to operate independently.
+
+The implementation must preserve applicable license notices and be tested to verify compatibility, standalone operation, and consistent validation behaviour.
