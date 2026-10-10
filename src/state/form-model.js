@@ -109,16 +109,6 @@ export function createFormModel() {
           : fieldChanges.validationRules
       }
 
-      /**
-       * Validates a field configuration.
-       * 
-       * Checks that the field has a valid ID, label, type, required flag
-       * and an array of non-empty validation rule strings.
-       * 
-       * @param {object} field - The field to validate.
-       * @throws {TypeError} If the field is invalid or contains invalid properties.
-       * @returns {void}
-       */
       validateField(updatedField)
 
       fields[index] = {
@@ -132,6 +122,17 @@ export function createFormModel() {
   }
 }
 
+
+/**
+ * Validates a field configuration.
+ * 
+ * Checks that the field has a valid ID, label, type, required flag
+ * and an array of non-empty validation rule strings.
+ * 
+ * @param {object} field - The field to validate.
+ * @throws {TypeError} If the field is invalid or contains invalid properties.
+ * @returns {void}
+ */
 function validateField(field) {
   if (!field || typeof field !== 'object' || Array.isArray(field)) {
     throw new TypeError('A field must be an object.')
