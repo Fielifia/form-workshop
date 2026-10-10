@@ -1,0 +1,65 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #242424;
+  background: #f5f6f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.container {
+  width: min(100% - 2rem, 960px);
+  margin-inline: auto;
+}
+
+.app-header {
+  padding: 2rem 0;
+  background: #2a3a4d;
+  color: #fff;
+}
+
+.app-header h1 {
+  margin: 0 0 .5rem;
+}
+
+.app-header p {
+  margin: 0;
+}
+
+.welcome {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #fff;
+}
+
+button {
+  padding: .75rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: #2a3a4d;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3c526e;
+}
+
+button:focus-visible {
+  outline: 3px solid #6b8fc4;
+  outline-offset: 3px;
+}
+
+#status-message {
+  margin-top: 1rem;
+  font-weight: bold;
+}
