@@ -82,5 +82,9 @@ button:focus-visible {
 }
 
 #field-editor li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: .75rem;
 }

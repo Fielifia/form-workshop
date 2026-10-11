@@ -33,7 +33,29 @@ export function createFieldEditor(formModel) {
 
       fields.forEach(field => {
         const item = document.createElement('li')
-        item.textContent = `${field.label} (${field.type})`
+        const label = document.createElement('span')
+
+        label.textContent = `${field.label} (${field.type})`
+
+        const removeButton = document.createElement('button')
+        removeButton.type = 'button'
+        removeButton.textContent = 'Remove'
+        removeButton.setAttribute(
+          'aria-label',
+          `Remove field ${field.label}`
+        )
+
+        /**
+         * Removes the selected field and refreshes the editor.
+         * 
+         * @returns{void}
+         */
+        removeButton.addEventListener('click', () => {
+          formModel.removeField(field.id)
+          render()
+        })
+
+        item.append(label, removeButton)
         list.append(item)
       })
 
@@ -44,6 +66,11 @@ export function createFieldEditor(formModel) {
     button.type = 'button'
     button.textContent = 'Add field'
 
+    /**
+     * Adds a new text field to the form model and refreshes the editor.
+     * 
+     * @returns {void}
+     */
     button.addEventListener('click', () => {
       const field = {
         id: crypto.randomUUID(),
