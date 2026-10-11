@@ -1,3 +1,4 @@
+import { ALLOWED_FIELD_TYPES } from '../state/form-model.js'
 /**
  * Creates the form editor interface.
  * 
@@ -78,6 +79,37 @@ export function createFieldEditor(formModel) {
           }
         })
 
+        const typeSelect = document.createElement('select')
+        typeSelect.setAttribute(
+          'aria-label',
+          `Field type for ${field.label}`
+        )
+
+        ALLOWED_FIELD_TYPES.forEach(type => {
+          const option = document.createElement('option')
+          option.value = type
+          option.textContent = type
+          option.selected = type === field.type
+          typeSelect.append(option)
+        })
+
+        /**
+         * Updates the field type in the model.
+         * 
+         * @returns {void}
+         */
+        typeSelect.addEventListener('change', () => {
+          try {
+            formModel.updateField(field.id, {
+              type: typeSelect.value
+            })
+            render()
+          } catch (error) {
+            showError(errorMessage)
+            render()
+          }
+        })
+
         const removeButton = document.createElement('button')
         removeButton.type = 'button'
         removeButton.textContent = 'Remove'
@@ -96,7 +128,7 @@ export function createFieldEditor(formModel) {
           render()
         })
 
-        item.append(labelInput, removeButton)
+        item.append(labelInput, typeSelect, removeButton)
         list.append(item)
       })
 

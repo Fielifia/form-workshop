@@ -1,4 +1,4 @@
-const ALLOWED_FIELD_TYPES = [
+export const ALLOWED_FIELD_TYPES = [
   'text',
   'email',
   'password',
