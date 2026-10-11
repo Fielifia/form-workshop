@@ -110,6 +110,39 @@ export function createFieldEditor(formModel) {
           }
         })
 
+        const requiredLabel = document.createElement('label')
+
+        const requiredCheckbox = document.createElement('input')
+        requiredCheckbox.type = 'checkbox'
+        requiredCheckbox.checked = field.required
+
+        requiredCheckbox.setAttribute(
+          'aria-label',
+          `Required field: ${field.label}`
+        )
+
+        requiredLabel.append(
+          requiredCheckbox,
+          document.createTextNode(' Required')
+        )
+
+        /**
+         * Updates whether the field is required.
+         * 
+         * @returns {void}
+         */
+        requiredCheckbox.addEventListener('change', () => {
+          try {
+            formModel.updateField(field.id, {
+              required: requiredCheckbox.checked
+            })
+            render()
+          } catch (error) {
+            showError(error.message)
+            render()
+          }
+        })
+
         const removeButton = document.createElement('button')
         removeButton.type = 'button'
         removeButton.textContent = 'Remove'
@@ -128,7 +161,7 @@ export function createFieldEditor(formModel) {
           render()
         })
 
-        item.append(labelInput, typeSelect, removeButton)
+        item.append(labelInput, typeSelect, requiredLabel, removeButton)
         list.append(item)
       })
 
