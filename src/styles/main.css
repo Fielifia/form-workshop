@@ -63,3 +63,24 @@ button:focus-visible {
   margin-top: 1rem;
   font-weight: bold;
 }
+
+
+/* ====== FORM EDITOR ====== */
+
+.form-editor {
+  margin: 1rem 0 2rem;
+  padding: 2rem;
+  background: #fff;
+}
+
+.form-editor h2 {
+  margin-top: 0;
+}
+
+#field-editor ul {
+  padding-left: 1.5rem;
+}
+
+#field-editor li {
+  margin-bottom: .75rem;
+}
