@@ -32,6 +32,144 @@ export function createFieldEditor(formModel) {
   }
 
   /**
+   * Updates a field, refreshes the editor and handles errors.
+   * 
+   * @param {string} fieldId - The ID of the field to update.
+   * @param {object} changes - The properties to update.
+   * @returns {void}
+   */
+  function updateField(fieldId, changes) {
+    try {
+      formModel.updateField(fieldId, changes)
+      render()
+    } catch (error) {
+      render()
+      showError(errorMessage)
+    }
+  }
+
+  /**
+   * Creates an input for editing a field label.
+   * 
+   * @param {object} field - The field to edit.
+   * @returns {HTMLInputElement}
+   */
+  function createLabelInput(field) {
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = field.label
+    input.setAttribute(
+      'aria-label',
+      `Field label for ${field.label}`
+    )
+
+    input.addEventListener('change', () => {
+      updateField(field.id, { label: input.value })
+    })
+
+    return input
+  }
+
+  /**
+   * Creates a select element for choosing a field type.
+   * 
+   * @param {object} field - The field to edit.
+   * @returns {HTMLSelectElement}
+   */
+  function createTypeSelect(field) {
+    const select = document.createElement('select')
+    select.setAttribute(
+      'aria-label',
+      `Field type for ${field.label}`
+    )
+
+    ALLOWED_FIELD_TYPES.forEach(type => {
+      const option = document.createElement('option')
+      option.value = type
+      option.textContent = type
+      select.append(option)
+    })
+
+    select.value = field.type
+
+    select.addEventListener('change', () => {
+      updateField(field.id, { type: select.value })
+    })
+
+    return select
+  }
+
+  /**
+   * Creates a checkbox element for setting whether a field is required.
+   * 
+   * @param {object} field - The field to edit.
+   * @returns {HTMLLabelElement}
+   */
+  function createRequiredCheckbox(field) {
+    const label = document.createElement('label')
+    const checkbox = document.createElement('input')
+
+    checkbox.type = 'checkbox'
+    checkbox.checked = field.required
+    checkbox.setAttribute(
+      'aria-label',
+      `Required field: ${field.label}`
+    )
+
+    label.append(
+      checkbox,
+      document.createTextNode(' Required')
+    )
+
+    checkbox.addEventListener('change', () => {
+      updateField(field.id, { required: checkbox.checked })
+    })
+
+    return label
+  }
+
+  /**
+   * Creates a button for removing a field.
+   * 
+   * @param {object} field - The field to remove.
+   * @returns {HTMLButtonElement}
+   */
+  function createRemoveButton(field) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = 'Remove'
+    button.setAttribute(
+      'aria-label',
+      `Remove field ${field.label}`
+    )
+
+    button.addEventListener('click', () => {
+      formModel.removeField(field.id)
+      render()
+    })
+
+    return button
+  }
+
+  /**
+   * Creates a new field with default settings.
+   * 
+   * @returns {void}
+   */
+  function addField() {
+    const field = {
+      id: crypto.randomUUID(),
+      label: 'New field',
+      type: 'text',
+      required: false,
+      validationRules: []
+    }
+
+    formModel.addField(field)
+    render()
+  }
+
+  /**
    * Renders the current fields or an empty-state message,
    * and provides a button for adding a field.
    * 
@@ -54,114 +192,13 @@ export function createFieldEditor(formModel) {
       fields.forEach(field => {
         const item = document.createElement('li')
 
-        const labelInput = document.createElement('input')
-        labelInput.type = 'text'
-        labelInput.value = field.label
-        labelInput.setAttribute(
-          'aria-label',
-          `Field label for ${field.label}`
+        item.append(
+          createLabelInput(field),
+          createTypeSelect(field),
+          createRequiredCheckbox(field),
+          createRemoveButton(field)
         )
 
-        /**
-         * Updates the field label in the model.
-         * 
-         * @returns {void}
-         */
-        labelInput.addEventListener('change', () => {
-          try {
-            formModel.updateField(field.id, {
-              label: labelInput.value
-            })
-            render()
-          } catch (error) {
-            labelInput.value = field.label
-            showError(error.message)
-          }
-        })
-
-        const typeSelect = document.createElement('select')
-        typeSelect.setAttribute(
-          'aria-label',
-          `Field type for ${field.label}`
-        )
-
-        ALLOWED_FIELD_TYPES.forEach(type => {
-          const option = document.createElement('option')
-          option.value = type
-          option.textContent = type
-          option.selected = type === field.type
-          typeSelect.append(option)
-        })
-
-        /**
-         * Updates the field type in the model.
-         * 
-         * @returns {void}
-         */
-        typeSelect.addEventListener('change', () => {
-          try {
-            formModel.updateField(field.id, {
-              type: typeSelect.value
-            })
-            render()
-          } catch (error) {
-            showError(errorMessage)
-            render()
-          }
-        })
-
-        const requiredLabel = document.createElement('label')
-
-        const requiredCheckbox = document.createElement('input')
-        requiredCheckbox.type = 'checkbox'
-        requiredCheckbox.checked = field.required
-
-        requiredCheckbox.setAttribute(
-          'aria-label',
-          `Required field: ${field.label}`
-        )
-
-        requiredLabel.append(
-          requiredCheckbox,
-          document.createTextNode(' Required')
-        )
-
-        /**
-         * Updates whether the field is required.
-         * 
-         * @returns {void}
-         */
-        requiredCheckbox.addEventListener('change', () => {
-          try {
-            formModel.updateField(field.id, {
-              required: requiredCheckbox.checked
-            })
-            render()
-          } catch (error) {
-            showError(error.message)
-            render()
-          }
-        })
-
-        const removeButton = document.createElement('button')
-        removeButton.type = 'button'
-        removeButton.textContent = 'Remove'
-        removeButton.setAttribute(
-          'aria-label',
-          `Remove field ${field.label}`
-        )
-
-        /**
-         * Removes the selected field and refreshes the editor.
-         * 
-         * @returns{void}
-         */
-        removeButton.addEventListener('click', () => {
-          formModel.removeField(field.id)
-          render()
-        })
-
-        item.append(labelInput, typeSelect, requiredLabel, removeButton)
         list.append(item)
       })
 
@@ -171,24 +208,7 @@ export function createFieldEditor(formModel) {
     const addButton = document.createElement('button')
     addButton.type = 'button'
     addButton.textContent = 'Add field'
-
-    /**
-     * Adds a new text field to the form model and refreshes the editor.
-     * 
-     * @returns {void}
-     */
-    addButton.addEventListener('click', () => {
-      const field = {
-        id: crypto.randomUUID(),
-        label: 'New field',
-        type: 'text',
-        required: false,
-        validationRules: []
-      }
-
-      formModel.addField(field)
-      render()
-    })
+    addButton.addEventListener('click', addField)
 
     editor.append(addButton)
   }
