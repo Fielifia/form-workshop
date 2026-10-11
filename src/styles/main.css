@@ -78,7 +78,7 @@ button:focus-visible {
 }
 
 #field-editor ul {
-  padding-left: 1.5rem;
+  padding-left: 0;
 }
 
 #field-editor li {
@@ -87,4 +87,23 @@ button:focus-visible {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: .75rem;
+}
+
+#field-editor li input {
+  flex: 1;
+  min-width: 0;
+  padding: .6rem;
+  border: 1px solid #b8c0ca;
+  border-radius: 6px;
+  font: inherit;
+}
+
+#field-editor li input:focus-visible {
+  outline: 3px solid #6b8fc4;
+  outline-offset: 3px;
+}
+
+[role="alert"] {
+  color: #a12626;
+  font-weight: bold;
 }

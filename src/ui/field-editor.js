@@ -14,6 +14,22 @@ export function createFieldEditor(formModel) {
     throw new Error('The field editor container was not found.')
   }
 
+  const errorMessage = document.createElement('p')
+  errorMessage.setAttribute('role', 'alert')
+  errorMessage.hidden = true
+  editor.before(errorMessage)
+
+  /**
+   * Displays an error message to the user.
+   * 
+   * @param {string} message - The message to display.
+   * @returns {void}
+   */
+  function showError(message) {
+    errorMessage.textContent = message
+    errorMessage.hidden = false
+  }
+
   /**
    * Renders the current fields or an empty-state message,
    * and provides a button for adding a field.
@@ -21,6 +37,9 @@ export function createFieldEditor(formModel) {
    * @returns {void}
    */
   function render() {
+    errorMessage.hidden = true
+    errorMessage.textContent = ''
+
     const fields = formModel.getFields()
     editor.replaceChildren()
 
@@ -33,9 +52,31 @@ export function createFieldEditor(formModel) {
 
       fields.forEach(field => {
         const item = document.createElement('li')
-        const label = document.createElement('span')
 
-        label.textContent = `${field.label} (${field.type})`
+        const labelInput = document.createElement('input')
+        labelInput.type = 'text'
+        labelInput.value = field.label
+        labelInput.setAttribute(
+          'aria-label',
+          `Field label for ${field.label}`
+        )
+
+        /**
+         * Updates the field label in the model.
+         * 
+         * @returns {void}
+         */
+        labelInput.addEventListener('change', () => {
+          try {
+            formModel.updateField(field.id, {
+              label: labelInput.value
+            })
+            render()
+          } catch (error) {
+            labelInput.value = field.label
+            showError(error.message)
+          }
+        })
 
         const removeButton = document.createElement('button')
         removeButton.type = 'button'
@@ -55,23 +96,23 @@ export function createFieldEditor(formModel) {
           render()
         })
 
-        item.append(label, removeButton)
+        item.append(labelInput, removeButton)
         list.append(item)
       })
 
       editor.append(list)
     }
 
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.textContent = 'Add field'
+    const addButton = document.createElement('button')
+    addButton.type = 'button'
+    addButton.textContent = 'Add field'
 
     /**
      * Adds a new text field to the form model and refreshes the editor.
      * 
      * @returns {void}
      */
-    button.addEventListener('click', () => {
+    addButton.addEventListener('click', () => {
       const field = {
         id: crypto.randomUUID(),
         label: 'New field',
@@ -84,7 +125,7 @@ export function createFieldEditor(formModel) {
       render()
     })
 
-    editor.append(button)
+    editor.append(addButton)
   }
 
   render()
