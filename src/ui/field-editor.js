@@ -15,7 +15,8 @@ export function createFieldEditor(formModel) {
   }
 
   /**
-   * Renders the current fields or an empty-state message.
+   * Renders the current fields or an empty-state message,
+   * and provides a button for adding a field.
    * 
    * @returns {void}
    */
@@ -27,19 +28,36 @@ export function createFieldEditor(formModel) {
       const message = document.createElement('p')
       message.textContent = 'No fields added yet.'
       editor.append(message)
-      return
+    } else {
+      const list = document.createElement('ul')
+
+      fields.forEach(field => {
+        const item = document.createElement('li')
+        item.textContent = `${field.label} (${field.type})`
+        list.append(item)
+      })
+
+      editor.append(list)
     }
 
-    const list = document - createElement('ul')
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = 'Add field'
 
-    fields.forEach(field => {
-      const item = document.createElement('li')
-      item.textContent = `${field.label} (${field.type})`
-      list.append(item)
+    button.addEventListener('click', () => {
+      const field = {
+        id: crypto.randomUUID(),
+        label: 'New field',
+        type: 'text',
+        required: false,
+        validationRules: []
+      }
+
+      formModel.addField(field)
+      render()
     })
 
-    editor.append(list)
-
+    editor.append(button)
   }
 
   render()
