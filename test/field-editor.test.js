@@ -115,7 +115,7 @@ test('updated a field type when the selection changes', () => {
   assert.equal(formModel.getFields()[0].type, 'email')
 })
 
-test('updated whether a field is required', () => {
+test('updates whether a field is required', () => {
   formModel.addField({
     id: 'field-1',
     label: 'Email',
@@ -131,4 +131,54 @@ test('updated whether a field is required', () => {
   checkbox.dispatchEvent(new dom.window.Event('change'))
 
   assert.equal(formModel.getFields()[0].required, true)
+})
+
+test('adds a selected validation rule to the field', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Email',
+    type: 'text',
+    required: false,
+    validationRules: []
+  })
+
+  const editor = createEditor()
+  const checkbox = Array.from(
+    editor.querySelectorAll('fieldset input[type="checkbox"]')
+  ).find(input => input.value === 'EmailRule')
+
+  checkbox.checked = true
+  checkbox.dispatchEvent(new dom.window.Event('change'))
+
+  assert.deepEqual(
+    formModel.getFields()[0].validationRules, ['EmailRule']
+  )
+})
+
+test('removes incompatible validation rules when digits-only is selected', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Code',
+    type: 'text',
+    required: false,
+    validationRules: ['UppercaseRule', 'EmailRule']
+  })
+
+  const editor = createEditor()
+  const checkbox = Array.from(
+    editor.querySelectorAll('fieldset input[type="checkbox"]')
+  ).find(input => input.value === 'OnlyDigitsRule')
+
+  checkbox.checked = true
+  checkbox.dispatchEvent(new dom.window.Event('change'))
+
+  assert.deepEqual(
+    formModel.getFields()[0].validationRules, ['OnlyDigitsRule']
+  )
+
+  const uppercaseCheckbox = Array.from(
+    editor.querySelectorAll('fieldset input[type="checkbox"]')
+  ).find(input => input.value === 'UppercaseRule')
+
+  assert.equal(uppercaseCheckbox.disabled, true)
 })
