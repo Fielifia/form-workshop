@@ -38,7 +38,7 @@ function createEditor() {
   return document.querySelector('#field-editor')
 }
 
-test('displays a message when no fields exists', () => {
+test('displays a message when no fields exist', () => {
   const editor = createEditor()
 
   assert.equal(
@@ -79,7 +79,7 @@ test('removes a field when the remove button is clicked', () => {
   )
 })
 
-test('updated a field label when the input changes', () => {
+test('updates a field label when the input changes', () => {
   formModel.addField({
     id: 'field-1',
     label: 'Name',
@@ -97,7 +97,7 @@ test('updated a field label when the input changes', () => {
   assert.equal(formModel.getFields()[0].label, 'Full name')
 })
 
-test('updated a field type when the selection changes', () => {
+test('updates a field type when the selection changes', () => {
   formModel.addField({
     id: 'field-1',
     label: 'Contact',
