@@ -1,8 +1,7 @@
 import './styles/main.css'
+import { createFormModel } from './state/form-model.js'
+import { createFieldEditor } from './ui/field-editor.js'
 
-const createFormButton = document.querySelector('#create-form-button')
-const statusMessage = document.querySelector('#status-message')
+const formModel = createFormModel()
 
-createFormButton.addEventListener('click', () => {
-  statusMessage.textContent = 'Your form workspace is ready to build.'
-})
+createFieldEditor(formModel)
