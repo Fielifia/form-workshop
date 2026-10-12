@@ -40,3 +40,54 @@ test('returns an error for an invalid email', () => {
   assert.equal(result.errors.length, 1)
   assert.equal(result.errors[0].fieldId, 'email')
 })
+
+test('returns a required error for an empty required field', () => {
+  const fields = [
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: true,
+      validationRules: []
+    }
+  ]
+
+  const result = validateForm(fields, {
+    name: ''
+  })
+
+  assert.equal(result.valid, false)
+  assert.equal(result.errors[0].fieldId, 'name')
+  assert.equal(result.errors[0].message, 'This field is required.')
+})
+
+test('accepts an empty optional field', () => {
+  const fields = [
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: false,
+      validationRules: []
+    }
+  ]
+
+  const result = validateForm(fields, {
+    name: ''
+  })
+
+  assert.equal(result.valid, true)
+  assert.deepEqual(result.errors, [])
+})
+
+test('rejects invalid field configuration input', () => {
+  assert.throws(
+    () => validateForm(null, {}),
+    TypeError
+  )
+
+  assert.throws(
+    () => validateForm([], null),
+    TypeError
+  )
+})
