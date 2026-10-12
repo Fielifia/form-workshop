@@ -46,3 +46,89 @@ test('displays a message when no fields exists', () => {
     'No fields added yet.'
   )
 })
+
+test('adds a field when the add button is clicked', () => {
+  const editor = createEditor()
+
+  editor.querySelector('button').click()
+
+  assert.equal(formModel.getFields().length, 1)
+  assert.equal(
+    editor.querySelectorAll('li').length,
+    1
+  )
+})
+
+test('removes a field when the remove button is clicked', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Email',
+    type: 'email',
+    required: false,
+    validationRules: []
+  })
+
+  const editor = createEditor()
+
+  editor.querySelector('button[aria-label="Remove field Email"]').click()
+
+  assert.equal(formModel.getFields().length, 0)
+  assert.equal(
+    editor.querySelectorAll('li').length,
+    0
+  )
+})
+
+test('updated a field label when the input changes', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Name',
+    type: 'text',
+    required: false,
+    validationRules: []
+  })
+
+  const editor = createEditor()
+  const input = editor.querySelector('input[type="text"]')
+
+  input.value = 'Full name'
+  input.dispatchEvent(new dom.window.Event('change'))
+
+  assert.equal(formModel.getFields()[0].label, 'Full name')
+})
+
+test('updated a field type when the selection changes', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Contact',
+    type: 'text',
+    required: false,
+    validationRules: []
+  })
+
+  const editor = createEditor()
+  const select = editor.querySelector('select')
+
+  select.value = 'email'
+  select.dispatchEvent(new dom.window.Event('change'))
+
+  assert.equal(formModel.getFields()[0].type, 'email')
+})
+
+test('updated whether a field is required', () => {
+  formModel.addField({
+    id: 'field-1',
+    label: 'Email',
+    type: 'email',
+    required: false,
+    validationRules: []
+  })
+
+  const editor = createEditor()
+  const checkbox = editor.querySelector('input[aria-label="Required field: Email"]')
+
+  checkbox.checked = true
+  checkbox.dispatchEvent(new dom.window.Event('change'))
+
+  assert.equal(formModel.getFields()[0].required, true)
+})
