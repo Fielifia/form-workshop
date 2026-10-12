@@ -78,15 +78,23 @@ button:focus-visible {
 }
 
 #field-editor ul {
-  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  list-style: none;
 }
 
 #field-editor li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: .75rem;
-  margin-bottom: .75rem;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #d8dee7;
+  border-radius: 8px;
+  background: #fff;
 }
 
 #field-editor li input,
@@ -97,12 +105,47 @@ button:focus-visible {
   font: inherit;
 }
 
-#field-editor li input {
-  flex: 1;
+#field-editor li>input[type="text"] {
+  flex: 1 1 180px;
+  min-width: 0;
 }
 
-#field-editor li select {
-  width: 160px;
+#field-editor li>select {
+  flex: 0 1 140px;
+  min-width: 110px;
+}
+
+#field-editor li>label {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+#field-editor li fieldset {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: .75rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #d8dee7;
+  border-radius: 6px;
+}
+
+#field-editor li fieldset legend {
+  padding: 0 .4rem;
+}
+
+#field-editor li fieldset label {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  min-width: 0;
+}
+
+#field-editor li fieldset input[type="checkbox"] {
+  flex-shrink: 0;
 }
 
 #field-editor li input:focus-visible,

@@ -1,4 +1,15 @@
 import { ALLOWED_FIELD_TYPES } from '../state/form-model.js'
+
+const AVAILABLE_VALIDATION_RULES = [
+  { value: 'EmailRule', label: 'Valid email address' },
+  { value: 'OnlyLettersRule', label: 'Letters only' },
+  { value: 'OnlyDigitsRule', label: 'Digits only' },
+  { value: 'UppercaseRule', label: 'Uppercase letter' },
+  { value: 'LowercaseRule', label: 'Lowercase letter' },
+  { value: 'SpecialCharacterRule', label: 'Special character' },
+  { value: 'NoCodeOrLinksRule', label: 'No code or links' }
+]
+
 /**
  * Creates the form editor interface.
  * 
@@ -44,7 +55,7 @@ export function createFieldEditor(formModel) {
       render()
     } catch (error) {
       render()
-      showError(errorMessage)
+      showError(error.message)
     }
   }
 
@@ -133,7 +144,7 @@ export function createFieldEditor(formModel) {
    * 
    * @param {object} field - The field to remove.
    * @returns {HTMLButtonElement}
-   */
+  */
   function createRemoveButton(field) {
     const button = document.createElement('button')
     button.type = 'button'
@@ -149,6 +160,92 @@ export function createFieldEditor(formModel) {
     })
 
     return button
+  }
+
+  /**
+   * Creates checkboxes for selecting validation rules.
+   * 
+   * @param {object} field - The field to configure.
+   * @returns {HTMLFieldSetElement}
+   */
+  function createValidationRules(field) {
+    const fieldset = document.createElement('fieldset')
+    const legend = document.createElement('legend')
+    legend.textContent = 'Validation rules'
+    fieldset.append(legend)
+
+    AVAILABLE_VALIDATION_RULES.forEach(rule => {
+      const label = document.createElement('label')
+      const checkbox = document.createElement('input')
+
+      checkbox.type = 'checkbox'
+      checkbox.value = rule.value
+      checkbox.checked = field.validationRules.includes(rule.value)
+
+      const isDigitsOnly = field.validationRules.includes('OnlyDigitsRule')
+
+      const isLettersOnly = field.validationRules.includes('OnlyLettersRule')
+
+      const DIGITS_ONLY_CONFLICTS = [
+        'EmailRule',
+        'SpecialCharacterRule',
+        'UppercaseRule',
+        'LowercaseRule'
+      ]
+
+      const LETTERS_ONLY_CONFLICTS = [
+        'EmailRule',
+        'SpecialCharacterRule'
+      ]
+
+      checkbox.disabled =
+        (isDigitsOnly && DIGITS_ONLY_CONFLICTS.includes(rule.value)) ||
+        (isLettersOnly && LETTERS_ONLY_CONFLICTS.includes(rule.value))
+
+      label.append(
+        checkbox,
+        document.createTextNode(` ${rule.label}`)
+      )
+
+      checkbox.addEventListener('change', () => {
+
+        let validationRules = field.validationRules.filter(
+          existingRule => existingRule !== rule.value
+        )
+
+        if (checkbox.checked) {
+          if (rule.value === 'OnlyLettersRule') {
+            validationRules = validationRules.filter(
+              existingRule => ![
+                'OnlyDigitsRule',
+                'EmailRule',
+                'SpecialCharacterRule'
+              ].includes(existingRule)
+            )
+          }
+
+          if (rule.value === 'OnlyDigitsRule') {
+            validationRules = validationRules.filter(
+              existingRule => ![
+                'OnlyLettersRule',
+                'EmailRule',
+                'SpecialCharacterRule',
+                'UppercaseRule',
+                'LowercaseRule'
+              ].includes(existingRule)
+            )
+          }
+
+          validationRules.push(rule.value)
+        }
+
+        updateField(field.id, { validationRules })
+      })
+
+      fieldset.append(label)
+    })
+
+    return fieldset
   }
 
   /**
@@ -196,7 +293,8 @@ export function createFieldEditor(formModel) {
           createLabelInput(field),
           createTypeSelect(field),
           createRequiredCheckbox(field),
-          createRemoveButton(field)
+          createRemoveButton(field),
+          createValidationRules(field)
         )
 
         list.append(item)
