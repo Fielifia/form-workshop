@@ -1,21 +1,19 @@
-import Validation from 'laboration-2/src/Validation.js'
 import Field from 'laboration-2/src/Field.js'
 import {
-  RequiredRule,
   EmailRule,
-  MinLengthRule,
-  MaxLengthRule,
-  MinValueRule,
-  MaxValueRule,
-  OnlyLettersRule,
-  OnlyDigitsRule,
-  UppercaseRule,
   LowercaseRule,
-  SpecialCharacterRule,
+  MatchingFieldsRule,
+  MaxLengthRule,
+  MinLengthRule,
   NoCodeOrLinksRule,
-  MatchingFieldsRule
+  OnlyDigitsRule,
+  OnlyLettersRule,
+  RequiredRule,
+  SpecialCharacterRule,
+  UppercaseRule
 } from 'laboration-2/src/Rule.js'
- 
+import Validation from 'laboration-2/src/Validation.js'
+
 const RULE_FACTORIES = {
   RequiredRule: () => new RequiredRule(),
   EmailRule: () => new EmailRule(),
@@ -44,13 +42,17 @@ function createValidation(fields) {
       field.addRule(new RequiredRule())
     }
 
-    config.validationRules.forEach(ruleName => {
+    config.validationRules.forEach(rule => {
+      const ruleName = typeof rule === 'string'
+        ? rule
+        : rule.name
+
       if (ruleName === 'MinLengthRule') {
-        field.addRule(new MinLengthRule(1))
+        field.addRule(new MinLengthRule(rule.value))
       } else if (ruleName === 'MaxLengthRule') {
-        field.addRule(new MaxLengthRule(255))
+        field.addRule(new MaxLengthRule(rule.value))
       } else if (ruleName === 'MatchingFieldsRule') {
-        throw new Error('MatchingFieldsRule requires a reference field identifier.')
+        field.addRule(new MatchingFieldsRule(rule.value))
       } else {
         const createRule = RULE_FACTORIES[ruleName]
 

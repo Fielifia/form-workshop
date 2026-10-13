@@ -1,5 +1,5 @@
-import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { test } from 'node:test'
 import { validateForm } from '../src/services/validation-service.js'
 
 test('accepts valid input', () => {
@@ -74,6 +74,25 @@ test('accepts an empty optional field', () => {
 
   const result = validateForm(fields, {
     name: ''
+  })
+
+  assert.equal(result.valid, true)
+  assert.deepEqual(result.errors, [])
+})
+
+test('accepts an empty optional field with an email rule', () => {
+  const fields = [
+    {
+      id: 'email',
+      label: 'Email',
+      type: 'email',
+      required: false,
+      validationRules: ['EmailRule']
+    }
+  ]
+
+  const result = validateForm(fields, {
+    email: ''
   })
 
   assert.equal(result.valid, true)
