@@ -10,7 +10,7 @@ import {
   OnlyLettersRule,
   RequiredRule,
   SpecialCharacterRule,
-  UppercaseRule
+  UppercaseRule,
 } from 'laboration-2/src/Rule.js'
 import Validation from 'laboration-2/src/Validation.js'
 
@@ -22,7 +22,36 @@ const RULE_FACTORIES = {
   UppercaseRule: () => new UppercaseRule(),
   LowercaseRule: () => new LowercaseRule(),
   SpecialCharacterRule: () => new SpecialCharacterRule(),
-  NoCodeOrLinksRule: () => new NoCodeOrLinksRule()
+  NoCodeOrLinksRule: () => new NoCodeOrLinksRule(),
+  MinLengthRule: value => new MinLengthRule(value),
+  MaxLengthRule: value => new MaxLengthRule(value),
+  MatchingFieldsRule: value => new MatchingFieldsRule(value)
+}
+
+/**
+ * Creates a rule instance from an configured rule.
+ * 
+ * @param {string|object} configuredRule - The configured rule.
+ * @returns {object} An instance of a validation rule.
+ * @throws {TypeError} If the rule configuration is invalid.
+ * @throws {Error} If the rule is unsupported.
+ */
+function createRule(configuredRule) {
+  const name = typeof configuredRule === 'string'
+    ? configuredRule
+    : configuredRule?.name
+
+  const factory = RULE_FACTORIES[name]
+
+  if (!factory) {
+    throw new Error(`Unsupported validation rule: ${name}`)
+  }
+
+  const value = typeof configuredRule === 'object'
+    ? configuredRule.value
+    : undefined
+
+  return factory(value)
 }
 
 /**
@@ -42,28 +71,16 @@ function createValidation(fields) {
       field.addRule(new RequiredRule())
     }
 
-    config.validationRules.forEach(rule => {
-      const ruleName = typeof rule === 'string'
-        ? rule
-        : rule.name
+    config.validationRules.forEach(configuredRule => {
+      const ruleName = typeof configuredRule === 'string'
+        ? configuredRule
+        : configuredRule.name
 
-      if (ruleName === 'MinLengthRule') {
-        field.addRule(new MinLengthRule(rule.value))
-      } else if (ruleName === 'MaxLengthRule') {
-        field.addRule(new MaxLengthRule(rule.value))
-      } else if (ruleName === 'MatchingFieldsRule') {
-        field.addRule(new MatchingFieldsRule(rule.value))
-      } else {
-        const createRule = RULE_FACTORIES[ruleName]
-
-        if (!createRule) {
-          throw new Error(`Unsupported validation rule: ${ruleName}`)
-        }
-
-        if (ruleName !== 'RequiredRule' || !config.required) {
-          field.addRule(createRule())
-        }
+      if (ruleName === 'RequiredRule' && config.required) {
+        return
       }
+
+      field.addRule(createRule(configuredRule))
     })
 
     validation.addField(field)
@@ -91,7 +108,6 @@ export function validateForm(fields, values) {
 
   const validation = createValidation(fields)
   const result = validation.validate(values)
-
 
   return {
     valid: result.success,
