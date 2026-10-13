@@ -19,7 +19,7 @@ const AVAILABLE_VALIDATION_RULES = [
  * @param {object} formModel - The model that manages the form fields.
  * @returns {void}
  */
-export function createFieldEditor(formModel) {
+export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   const editor = document.querySelector('#field-editor')
 
   if (!editor) {
@@ -53,6 +53,7 @@ export function createFieldEditor(formModel) {
     try {
       formModel.updateField(fieldId, changes)
       render()
+      onFieldsChange()
     } catch (error) {
       render()
       showError(error.message)
@@ -157,6 +158,7 @@ export function createFieldEditor(formModel) {
     button.addEventListener('click', () => {
       formModel.removeField(field.id)
       render()
+      onFieldsChange()
     })
 
     return button
@@ -264,6 +266,7 @@ export function createFieldEditor(formModel) {
 
     formModel.addField(field)
     render()
+    onFieldsChange()
   }
 
   /**

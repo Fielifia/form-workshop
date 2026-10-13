@@ -158,3 +158,16 @@ button:focus-visible {
   color: #a12626;
   font-weight: bold;
 }
+
+/* ====== FORM PREVIEW ====== */
+
+#form-preview {
+  margin: 1rem 0 2rem;
+  padding: 2rem;
+  background: #fff;
+}
+
+.form-preview h2 {
+  margin-top: 0;
+  text-align: center;
+}
