@@ -63,7 +63,7 @@ export function createFormPreview(formModel) {
       }
 
       input.id = field.id
-      input.name = field.name
+      input.name = field.id
       input.required = field.required
 
       if (field.type === 'checkbox') {
@@ -103,7 +103,7 @@ export function createFormPreview(formModel) {
           : input.value
       })
 
-      const result = validateForm[fields, values]
+      const result = validateForm(fields, values)
 
       fields.forEach(field => {
         const input = form.elements.namedItem(field.id)

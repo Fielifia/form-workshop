@@ -167,7 +167,43 @@ button:focus-visible {
   background: #fff;
 }
 
-.form-preview h2 {
+#form-preview h2 {
   margin-top: 0;
   text-align: center;
+}
+
+#form-preview form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+#form-preview .preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+#form-preview input:not([type="checkbox"]),
+#form-preview textarea,
+#form-preview select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 450px;
+  padding: .65rem;
+  font: inherit;
+}
+
+#form-preview .field.error,
+#form-preview .validation-error {
+  color: #a12626;
+}
+
+#form-preview .validation-success {
+  color: #18794e;
+}
+
+#form-preview .field-error {
+  margin: 0;
+  font-size: .9rem;
 }
