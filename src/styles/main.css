@@ -161,6 +161,12 @@ button:focus-visible {
 
 /* ====== FORM PREVIEW ====== */
 
+.form-preview {
+  margin: 1rem 0 2rem;
+  padding: 2rem;
+  background: #fff;
+}
+
 #form-preview {
   margin: 1rem 0 2rem;
   padding: 2rem;

@@ -36,6 +36,8 @@ export function createFormPreview(formModel) {
     const feedback = document.createElement('div')
     feedback.setAttribute('aria-live', 'polite')
 
+    const errorElements = new Map()
+
     fields.forEach(field => {
       const group = document.createElement('div')
       group.className = 'preview-field'
@@ -79,6 +81,7 @@ export function createFormPreview(formModel) {
       error.hidden = true
 
       input.setAttribute('aria-describedby', error.id)
+      errorElements.set(field.id, error)
 
       group.append(error)
       form.append(group)
@@ -107,7 +110,7 @@ export function createFormPreview(formModel) {
 
       fields.forEach(field => {
         const input = form.elements.namedItem(field.id)
-        const error = form.querySelector(`#${field.id}-error`)
+        const error = errorElements.get(field.id)
 
         const fieldErrors = result.errors.filter(
           item => item.fieldId === field.id
@@ -120,7 +123,7 @@ export function createFormPreview(formModel) {
           error.textContent = fieldErrors
             .map(item => item.message)
             .join(' ')
-          
+
           input.setAttribute('aria-invalid', 'true')
         } else {
           input.removeAttribute('aria-invalid')
@@ -130,7 +133,7 @@ export function createFormPreview(formModel) {
       feedback.textContent = result.valid
         ? 'The form is valid'
         : 'Please correct the errors above.'
-      
+
       feedback.className = result.valid
         ? 'validation-success'
         : 'validation-error'
