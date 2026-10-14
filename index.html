@@ -20,14 +20,19 @@
     </header>
 
     <main class="container">
-      <section class="welcome">
-        <h2>Your form workspace</h2>
+      <section class="welcome" aria-labelledby="welcome-heading">
+        <h2 id="welcome-heading">Your form workspace</h2>
         <p>Configure your form fields below.</p>
       </section>
 
       <section class="form-editor" aria-labelledby="editor-heading">
         <h2 id="editor-heading">Form fields</h2>
         <div id="field-editor" aria-live="polite"></div>
+      </section>
+
+      <section class="form-preview" aria-labelledby="editor-heading">
+        <h2 id="preview-heading">Preview your form</h2>
+        <div id="form-preview"></div>
       </section>
     </main>
   </body>

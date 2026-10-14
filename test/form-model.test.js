@@ -59,6 +59,67 @@ test('supports optional fields', () => {
   assert.equal(form.getFields()[0].required, false)
 })
 
+test('supports parameterized validation rules', () => {
+  const form = createFormModel()
+
+  form.addField({
+    id: 'password',
+    label: 'Password',
+    type: 'password',
+    required: true,
+    validationRules: [
+      { name: 'MinLengthRule', value: 8 },
+      { name: 'MaxLengthRule', value: 50 }
+    ]
+  })
+
+  assert.deepEqual(
+    form.getFields()[0].validationRules,
+    [
+      { name: 'MinLengthRule', value: 8 },
+      { name: 'MaxLengthRule', value: 50 }
+    ]
+  )
+})
+
+test('reject invalid length rule parameters', () => {
+  const form = createFormModel()
+
+  assert.throws(() => {
+    form.addField({
+      id: 'password',
+      label: 'Password',
+      type: 'password',
+      required: true,
+      validationRules: [
+        { name: 'MinLengthRule', value: -1 },
+      ]
+    })
+  }, TypeError)
+})
+
+test('returns copies of parameterized validation rules', () => {
+  const form = createFormModel()
+
+  form.addField({
+    id: 'password',
+    label: 'Password',
+    type: 'password',
+    required: true,
+    validationRules: [
+      { name: 'MinLengthRule', value: 8 },
+    ]
+  })
+
+  const fields = form.getFields()
+  fields[0].validationRules[0].value = 2
+
+  assert.equal(
+    form.getFields()[0].validationRules[0].value,
+    8
+  )
+})
+
 test('stores field validation rules independently', () => {
   const form = createFormModel()
   const rules = ['email']

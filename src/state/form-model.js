@@ -34,7 +34,7 @@ export function createFormModel() {
     getFields() {
       return fields.map(field => ({
         ...field,
-        validationRules: [...field.validationRules]
+        validationRules: copyValidationRules(field.validationRules)
       }))
     },
 
@@ -60,7 +60,7 @@ export function createFormModel() {
         label: field.label.trim(),
         type: field.type,
         required: field.required,
-        validationRules: [...field.validationRules]
+        validationRules: copyValidationRules(field.validationRules)
       })
     },
 
@@ -105,7 +105,7 @@ export function createFormModel() {
         ...fieldChanges,
         id,
         validationRules: fieldChanges.validationRules === undefined
-          ? [...fields[index].validationRules]
+          ? copyValidationRules(fields[index].validationRules)
           : fieldChanges.validationRules
       }
 
@@ -114,7 +114,7 @@ export function createFormModel() {
       fields[index] = {
         ...updatedField,
         label: updatedField.label.trim(),
-        validationRules: [...updatedField.validationRules]
+        validationRules: copyValidationRules(updatedField.validationRules)
       }
 
       return true
@@ -122,6 +122,19 @@ export function createFormModel() {
   }
 }
 
+/**
+ * Creates a copy of validation rules.
+ * 
+ * Strings are immutable, while rule objects are copied to prevent external changes from affecting the model's internal state.
+ * 
+ * @param {Array<string|object>} validationRules - Rules to copy.
+ * @returns {Array<string|object>} Copies of the validation rules.
+ */
+function copyValidationRules(validationRules) {
+  return validationRules.map(rule => (
+    typeof rule === 'string' ? rule : { ...rule }
+  ))
+}
 
 /**
  * Validates a field configuration.
@@ -147,7 +160,8 @@ function validateField(field) {
   }
 
   if (!ALLOWED_FIELD_TYPES.includes(field.type)) {
-    throw new TypeError(`Unsupported field type: "${field.type}". A field must have a valid type. Allowed types: ${ALLOWED_FIELD_TYPES.join(', ')}.`)
+    throw new TypeError(`Unsupported field type: "${field.type}". A field must have a valid type. Allowed types: ${ALLOWED_FIELD_TYPES.join(', ')}.`
+    )
   }
 
   if (typeof field.required !== 'boolean') {
@@ -158,7 +172,36 @@ function validateField(field) {
     throw new TypeError('Validation rules must be an array.')
   }
 
-  if (!field.validationRules.every(rule => typeof rule === 'string' && rule.trim() !== '')) {
-    throw new TypeError('Each validation rule must be a non-empty string.')
+  const validRule = rule => {
+    if (typeof rule == 'string') {
+      return rule.trim() !== ''
+    }
+
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+      return false
+    }
+
+    if (typeof rule.name !== 'string' || rule.name.trim() === '') {
+      return false
+    }
+
+    if (
+      rule.name === 'MinLengthRule' ||
+      rule.name === 'MaxLengthRule'
+    ) {
+      return Number.isInteger(rule.value) && rule.value >= 0
+    }
+
+    if (rule.name === 'MatchingFieldsRule') {
+      return typeof rule.value === 'string' && rule.value.trim() !== ''
+    }
+
+    return false
+  }
+
+  if (!field.validationRules.every(validRule)) {
+    throw new TypeError(
+      'Validation rules contain an invalid rule configuration.'
+    )
   }
 }

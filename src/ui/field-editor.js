@@ -10,6 +10,54 @@ const AVAILABLE_VALIDATION_RULES = [
   { value: 'NoCodeOrLinksRule', label: 'No code or links' }
 ]
 
+const RULE_CONFLICTS = {
+  OnlyDigitsRule: [
+    'OnlyLettersRule',
+    'EmailRule',
+    'SpecialCharacterRule',
+    'UppercaseRule',
+    'LowercaseRule'
+  ],
+  OnlyLettersRule: [
+    'OnlyDigitsRule',
+    'EmailRule',
+    'SpecialCharacterRule'
+  ]
+}
+
+const DISABLED_RULES = {
+  OnlyDigitsRule: [
+    'EmailRule',
+    'SpecialCharacterRule',
+    'UppercaseRule',
+    'LowercaseRule'
+  ],
+  OnlyLettersRule: [
+    'EmailRule',
+    'SpecialCharacterRule'
+  ]
+}
+
+const RULES_BY_FIELD_TYPE = {
+  text: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+  textarea: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+  password: [
+    'OnlyLettersRule',
+    'OnlyDigitsRule',
+    'UppercaseRule',
+    'LowercaseRule',
+    'SpecialCharacterRule',
+    'NoCodeOrLinksRule'
+  ],
+  number: ['OnlyDigitsRule'],
+  email: ['EmailRule'],
+  tel: [],
+  url: [],
+  checkbox: [],
+  date: [],
+
+}
+
 /**
  * Creates the form editor interface.
  * 
@@ -19,7 +67,7 @@ const AVAILABLE_VALIDATION_RULES = [
  * @param {object} formModel - The model that manages the form fields.
  * @returns {void}
  */
-export function createFieldEditor(formModel) {
+export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   const editor = document.querySelector('#field-editor')
 
   if (!editor) {
@@ -53,6 +101,7 @@ export function createFieldEditor(formModel) {
     try {
       formModel.updateField(fieldId, changes)
       render()
+      onFieldsChange()
     } catch (error) {
       render()
       showError(error.message)
@@ -104,7 +153,15 @@ export function createFieldEditor(formModel) {
     select.value = field.type
 
     select.addEventListener('change', () => {
-      updateField(field.id, { type: select.value })
+      const allowedRules = RULES_BY_FIELD_TYPE[select.value] ?? []
+      const validationRules = field.validationRules.filter(
+        rule => allowedRules.includes(rule)
+      )
+
+      updateField(field.id, {
+        type: select.value,
+        validationRules
+      })
     })
 
     return select
@@ -157,6 +214,7 @@ export function createFieldEditor(formModel) {
     button.addEventListener('click', () => {
       formModel.removeField(field.id)
       render()
+      onFieldsChange()
     })
 
     return button
@@ -174,6 +232,9 @@ export function createFieldEditor(formModel) {
     legend.textContent = 'Validation rules'
     fieldset.append(legend)
 
+    const allowedRules = RULES_BY_FIELD_TYPE[field.type] ?? []
+    fieldset.disabled = allowedRules.length === 0
+
     AVAILABLE_VALIDATION_RULES.forEach(rule => {
       const label = document.createElement('label')
       const checkbox = document.createElement('input')
@@ -182,25 +243,15 @@ export function createFieldEditor(formModel) {
       checkbox.value = rule.value
       checkbox.checked = field.validationRules.includes(rule.value)
 
-      const isDigitsOnly = field.validationRules.includes('OnlyDigitsRule')
+      checkbox.disabled = !allowedRules.includes(rule.value) ||
+        field.validationRules.some(
+        selectedRule => DISABLED_RULES[selectedRule]?.includes(rule.value)
+      )
 
-      const isLettersOnly = field.validationRules.includes('OnlyLettersRule')
-
-      const DIGITS_ONLY_CONFLICTS = [
-        'EmailRule',
-        'SpecialCharacterRule',
-        'UppercaseRule',
-        'LowercaseRule'
-      ]
-
-      const LETTERS_ONLY_CONFLICTS = [
-        'EmailRule',
-        'SpecialCharacterRule'
-      ]
-
-      checkbox.disabled =
-        (isDigitsOnly && DIGITS_ONLY_CONFLICTS.includes(rule.value)) ||
-        (isLettersOnly && LETTERS_ONLY_CONFLICTS.includes(rule.value))
+      checkbox.setAttribute(
+        'aria-label',
+        `${rule.label} for ${field.label}`
+      )
 
       label.append(
         checkbox,
@@ -208,33 +259,14 @@ export function createFieldEditor(formModel) {
       )
 
       checkbox.addEventListener('change', () => {
-
         let validationRules = field.validationRules.filter(
           existingRule => existingRule !== rule.value
         )
 
         if (checkbox.checked) {
-          if (rule.value === 'OnlyLettersRule') {
-            validationRules = validationRules.filter(
-              existingRule => ![
-                'OnlyDigitsRule',
-                'EmailRule',
-                'SpecialCharacterRule'
-              ].includes(existingRule)
-            )
-          }
-
-          if (rule.value === 'OnlyDigitsRule') {
-            validationRules = validationRules.filter(
-              existingRule => ![
-                'OnlyLettersRule',
-                'EmailRule',
-                'SpecialCharacterRule',
-                'UppercaseRule',
-                'LowercaseRule'
-              ].includes(existingRule)
-            )
-          }
+          validationRules = validationRules.filter(
+            existingRule => !RULE_CONFLICTS[rule.value]?.includes(existingRule)
+          )
 
           validationRules.push(rule.value)
         }
@@ -264,6 +296,7 @@ export function createFieldEditor(formModel) {
 
     formModel.addField(field)
     render()
+    onFieldsChange()
   }
 
   /**
