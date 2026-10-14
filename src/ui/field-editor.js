@@ -25,6 +25,19 @@ const RULE_CONFLICTS = {
   ]
 }
 
+const DISABLED_RULES = {
+  OnlyDigitsRule: [
+    'EmailRule',
+    'SpecialCharacterRule',
+    'UppercaseRule',
+    'LowercaseRule'
+  ],
+  OnlyLettersRule: [
+    'EmailRule',
+    'SpecialCharacterRule'
+  ]
+}
+
 /**
  * Creates the form editor interface.
  * 
@@ -199,10 +212,14 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
       checkbox.value = rule.value
       checkbox.checked = field.validationRules.includes(rule.value)
 
-      checkbox.disabled =
-        field.validationRules.some(
-          selectedRule => RULE_CONFLICTS[selectedRule]?.includes(rule.value)
-        )
+      checkbox.disabled = field.validationRules.some(
+        selectedRule => DISABLED_RULES[selectedRule]?.includes(rule.value)
+      )
+
+      checkbox.setAttribute(
+        'aria-label',
+        `${rule.label} for ${field.label}`
+      )
 
       label.append(
         checkbox,
@@ -216,7 +233,7 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
 
         if (checkbox.checked) {
           validationRules = validationRules.filter(
-            existingRule => ! RULE_CONFLICTS[rule.value]?.includes(existingRule)
+            existingRule => !RULE_CONFLICTS[rule.value]?.includes(existingRule)
           )
 
           validationRules.push(rule.value)
