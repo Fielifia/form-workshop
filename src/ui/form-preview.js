@@ -1,4 +1,5 @@
 import { validateForm } from '../services/validation-service.js'
+import { evaluatePassword } from '../services/password-service.js'
 
 /**
  * Creates a form preview  based on the configured form fields.
@@ -41,7 +42,7 @@ export function createFormPreview(formModel) {
     fields.forEach(field => {
       const group = document.createElement('div')
       group.className = 'preview-field'
-
+      
       const label = document.createElement('label')
       label.htmlFor = field.id
       label.textContent = field.label
@@ -84,6 +85,49 @@ export function createFormPreview(formModel) {
       errorElements.set(field.id, error)
 
       group.append(error)
+
+      if (field.type === 'password') {
+        const passwordFeedback = document.createElement('div')
+        passwordFeedback.className = 'password-feedback'
+        passwordFeedback.setAttribute('aria-live', 'polite')
+        passwordFeedback.hidden = true
+
+        group.append(passwordFeedback)
+
+        input.addEventListener('input', () => {
+          const result = evaluatePassword(input.value)
+
+          passwordFeedback.replaceChildren()
+
+          if (input.value.length === 0) {
+            passwordFeedback.hidden = true
+            return
+          }
+
+          passwordFeedback.hidden = false
+
+          const strength = document.createElement('p')
+          strength.textContent = `Strength: ${result.strength} (${result.score}/5)`
+          passwordFeedback.append(strength)
+
+          if (result.suggestions.length > 0) {
+            const heading = document.createElement('p')
+            heading.textContent = 'Suggestions:'
+            passwordFeedback.append(heading)
+
+            const list = document.createElement('ul')
+
+            result.suggestions.forEach(suggestion => {
+              const item = document.createElement('li')
+              item.textContent = suggestion
+              list.append(item)
+            })
+
+            passwordFeedback.append(list)
+          }
+        })
+      }
+
       form.append(group)
     })
 
