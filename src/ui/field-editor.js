@@ -38,6 +38,26 @@ const DISABLED_RULES = {
   ]
 }
 
+const RULES_BY_FIELD_TYPE = {
+  text: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+  textarea: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+  password: [
+    'OnlyLettersRule',
+    'OnlyDigitsRule',
+    'UppercaseRule',
+    'LowercaseRule',
+    'SpecialCharacterRule',
+    'NoCodeOrLinksRule'
+  ],
+  number: ['OnlyDigitsRule'],
+  email: ['EmailRule'],
+  tel: [],
+  url: [],
+  checkbox: [],
+  date: [],
+
+}
+
 /**
  * Creates the form editor interface.
  * 
@@ -133,7 +153,15 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
     select.value = field.type
 
     select.addEventListener('change', () => {
-      updateField(field.id, { type: select.value })
+      const allowedRules = RULES_BY_FIELD_TYPE[select.value] ?? []
+      const validationRules = field.validationRules.filter(
+        rule => allowedRules.includes(rule)
+      )
+
+      updateField(field.id, {
+        type: select.value,
+        validationRules
+      })
     })
 
     return select
@@ -204,6 +232,9 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
     legend.textContent = 'Validation rules'
     fieldset.append(legend)
 
+    const allowedRules = RULES_BY_FIELD_TYPE[field.type] ?? []
+    fieldset.disabled = allowedRules.length === 0
+
     AVAILABLE_VALIDATION_RULES.forEach(rule => {
       const label = document.createElement('label')
       const checkbox = document.createElement('input')
@@ -212,7 +243,8 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
       checkbox.value = rule.value
       checkbox.checked = field.validationRules.includes(rule.value)
 
-      checkbox.disabled = field.validationRules.some(
+      checkbox.disabled = !allowedRules.includes(rule.value) ||
+        field.validationRules.some(
         selectedRule => DISABLED_RULES[selectedRule]?.includes(rule.value)
       )
 
