@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { validateForm } from '../src/services/validation-service.js'
 
+console.log(`\n===== VALIDATION SERVICE TESTS =====`)
+
 test('accepts valid input', () => {
   const fields = [
     {

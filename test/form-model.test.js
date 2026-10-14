@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createFormModel } from '../src/state/form-model.js'
 
+console.log(`\n===== FORM MODEL TESTS =====`)
+
 function makeField(overrides = {}) {
   return {
     id: 'email-field',
