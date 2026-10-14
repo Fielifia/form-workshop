@@ -20,6 +20,8 @@ body {
   margin-inline: auto;
 }
 
+/* ===== HEADER ===== */
+
 .app-header {
   padding: 2rem 0;
   background: #2a3a4d;
@@ -34,11 +36,26 @@ body {
   margin: 0;
 }
 
-.welcome {
-  margin-top: 2rem;
+/* ===== SHARED SECTIONS ===== */
+
+.welcome,
+.form-editor,
+.form-preview {
+  margin: 1rem 0 2rem;
   padding: 2rem;
   background: #fff;
 }
+
+.welcome {
+  margin-top: 2rem;
+}
+
+.form-editor h2,
+.form-preview h2 {
+  margin-top: 0;
+}
+
+/* ===== BUTTONS ===== */
 
 button {
   padding: .75rem 1rem;
@@ -59,23 +76,33 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
+/* ===== STATUS AND ERRORS ===== */
+
 #status-message {
   margin-top: 1rem;
   font-weight: bold;
 }
 
+[role="alert"] {
+  color: #a12626;
+  font-weight: bold;
+}
+
+#form-preview .field-error,
+#form-preview .validation-error {
+  color: #a12626;
+}
+
+#form-preview .validation-success {
+  color: #18794e;
+}
+
+#form-preview .field-error {
+  margin: 0;
+  font-size: .9rem;
+}
 
 /* ====== FORM EDITOR ====== */
-
-.form-editor {
-  margin: 1rem 0 2rem;
-  padding: 2rem;
-  background: #fff;
-}
-
-.form-editor h2 {
-  margin-top: 0;
-}
 
 #field-editor ul {
   display: flex;
@@ -122,11 +149,11 @@ button:focus-visible {
 }
 
 #field-editor li fieldset {
-  flex: 1 1 100%;
-  min-width: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  flex: 1 1 100%;
   gap: .75rem;
+  min-width: 0;
   margin: 0;
   padding: 1rem;
   border: 1px solid #d8dee7;
@@ -154,29 +181,7 @@ button:focus-visible {
   outline-offset: 3px;
 }
 
-[role="alert"] {
-  color: #a12626;
-  font-weight: bold;
-}
-
 /* ====== FORM PREVIEW ====== */
-
-.form-preview {
-  margin: 1rem 0 2rem;
-  padding: 2rem;
-  background: #fff;
-}
-
-#form-preview {
-  margin: 1rem 0 2rem;
-  padding: 2rem;
-  background: #fff;
-}
-
-#form-preview h2 {
-  margin-top: 0;
-  text-align: center;
-}
 
 #form-preview form {
   display: flex;
@@ -198,18 +203,4 @@ button:focus-visible {
   max-width: 450px;
   padding: .65rem;
   font: inherit;
-}
-
-#form-preview .field.error,
-#form-preview .validation-error {
-  color: #a12626;
-}
-
-#form-preview .validation-success {
-  color: #18794e;
-}
-
-#form-preview .field-error {
-  margin: 0;
-  font-size: .9rem;
 }

@@ -10,6 +10,21 @@ const AVAILABLE_VALIDATION_RULES = [
   { value: 'NoCodeOrLinksRule', label: 'No code or links' }
 ]
 
+const RULE_CONFLICTS = {
+  OnlyDigitsRule: [
+    'OnlyLettersRule',
+    'EmailRule',
+    'SpecialCharacterRule',
+    'UppercaseRule',
+    'LowercaseRule'
+  ],
+  OnlyLettersRule: [
+    'OnlyDigitsRule',
+    'EmailRule',
+    'SpecialCharacterRule'
+  ]
+}
+
 /**
  * Creates the form editor interface.
  * 
@@ -184,25 +199,10 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
       checkbox.value = rule.value
       checkbox.checked = field.validationRules.includes(rule.value)
 
-      const isDigitsOnly = field.validationRules.includes('OnlyDigitsRule')
-
-      const isLettersOnly = field.validationRules.includes('OnlyLettersRule')
-
-      const DIGITS_ONLY_CONFLICTS = [
-        'EmailRule',
-        'SpecialCharacterRule',
-        'UppercaseRule',
-        'LowercaseRule'
-      ]
-
-      const LETTERS_ONLY_CONFLICTS = [
-        'EmailRule',
-        'SpecialCharacterRule'
-      ]
-
       checkbox.disabled =
-        (isDigitsOnly && DIGITS_ONLY_CONFLICTS.includes(rule.value)) ||
-        (isLettersOnly && LETTERS_ONLY_CONFLICTS.includes(rule.value))
+        field.validationRules.some(
+          selectedRule => RULE_CONFLICTS[selectedRule]?.includes(rule.value)
+        )
 
       label.append(
         checkbox,
@@ -210,33 +210,14 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
       )
 
       checkbox.addEventListener('change', () => {
-
         let validationRules = field.validationRules.filter(
           existingRule => existingRule !== rule.value
         )
 
         if (checkbox.checked) {
-          if (rule.value === 'OnlyLettersRule') {
-            validationRules = validationRules.filter(
-              existingRule => ![
-                'OnlyDigitsRule',
-                'EmailRule',
-                'SpecialCharacterRule'
-              ].includes(existingRule)
-            )
-          }
-
-          if (rule.value === 'OnlyDigitsRule') {
-            validationRules = validationRules.filter(
-              existingRule => ![
-                'OnlyLettersRule',
-                'EmailRule',
-                'SpecialCharacterRule',
-                'UppercaseRule',
-                'LowercaseRule'
-              ].includes(existingRule)
-            )
-          }
+          validationRules = validationRules.filter(
+            existingRule => ! RULE_CONFLICTS[rule.value]?.includes(existingRule)
+          )
 
           validationRules.push(rule.value)
         }
