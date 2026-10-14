@@ -4,6 +4,8 @@ import { JSDOM } from 'jsdom'
 import { createFormModel } from '../src/state/form-model.js'
 import { createFieldEditor } from '../src/ui/field-editor.js'
 
+console.log(`\n===== FIELD EDITOR TESTS =====`)
+
 let dom
 let formModel
 
