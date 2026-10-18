@@ -11,7 +11,6 @@ export const ALLOWED_FIELD_TYPES = [
 ]
 
 const ALLOWED_VALIDATION_RULES = [
-  'RequiredRule',
   'EmailRule',
   'OnlyLettersRule',
   'OnlyDigitsRule',

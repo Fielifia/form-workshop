@@ -41,22 +41,44 @@ const DISABLED_RULES = {
 const RULES_BY_FIELD_TYPE = {
   text: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
   textarea: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
-  password: [
-    'OnlyLettersRule',
-    'OnlyDigitsRule',
-    'UppercaseRule',
-    'LowercaseRule',
-    'SpecialCharacterRule',
-    'NoCodeOrLinksRule'
-  ],
+  password: [],
   number: ['OnlyDigitsRule'],
   email: ['EmailRule'],
   tel: [],
   url: [],
   checkbox: [],
   date: [],
-
 }
+
+
+const PARAMETERIZED_RULES = [
+  { value: 'MinLengthRule', label: 'Minimum length' },
+  { value: 'MaxLengthRule', label: 'Maximum length' },
+  { value: 'MatchingFieldsRule', label: 'Match another field' }
+]
+
+const PARAMETERIZED_RULES_BY_FIELD_TYPE = {
+  text: PARAMETERIZED_RULES.map(rule => rule.value),
+  textarea: PARAMETERIZED_RULES.map(rule => rule.value),
+  password: PARAMETERIZED_RULES.map(rule => rule.value),
+  email: PARAMETERIZED_RULES.map(rule => rule.value),
+  tel: PARAMETERIZED_RULES.map(rule => rule.value),
+  url: PARAMETERIZED_RULES.map(rule => rule.value),
+  number: [],
+  checkbox: [],
+  date: []
+}
+
+/**
+ *
+ *
+ * @param {*} rule
+ * @return {*} 
+ */
+function getRuleName(rule) {
+  return typeof rule === 'string' ? rule : rule.name
+}
+
 
 /**
  * Creates the form editor interface.
@@ -154,9 +176,17 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
 
     select.addEventListener('change', () => {
       const allowedRules = RULES_BY_FIELD_TYPE[select.value] ?? []
+
+      const parameterizedRules =
+        PARAMETERIZED_RULES_BY_FIELD_TYPE[select.value] ?? []
+
       const validationRules = field.validationRules.filter(
-        rule => allowedRules.includes(rule)
-      )
+        rule => {
+          const ruleName = getRuleName(rule)
+
+          return allowedRules.includes(ruleName) ||
+            parameterizedRules.includes(ruleName)
+        })
 
       updateField(field.id, {
         type: select.value,
@@ -232,6 +262,14 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
     legend.textContent = 'Validation rules'
     fieldset.append(legend)
 
+    const isPassword = field.type === 'password'
+
+    const passwordRequiredRules = [
+      'UppercaseRule',
+      'LowercaseRule',
+      'SpecialCharacterRule'
+    ]
+
     const allowedRules = RULES_BY_FIELD_TYPE[field.type] ?? []
     fieldset.disabled = allowedRules.length === 0
 
@@ -241,12 +279,20 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
 
       checkbox.type = 'checkbox'
       checkbox.value = rule.value
-      checkbox.checked = field.validationRules.includes(rule.value)
 
-      checkbox.disabled = !allowedRules.includes(rule.value) ||
+      const isPasswordRequiredRule =
+        isPassword && passwordRequiredRules.includes(rule.value)
+
+      checkbox.checked = isPasswordRequiredRule ||
         field.validationRules.some(
-        selectedRule => DISABLED_RULES[selectedRule]?.includes(rule.value)
-      )
+          selectedRule => getRuleName(selectedRule) === rule.value)
+
+      checkbox.disabled = isPasswordRequiredRule ||
+        !allowedRules.includes(rule.value) ||
+        field.validationRules.some(
+          selectedRule =>
+            DISABLED_RULES[getRuleName(selectedRule)]?.includes(rule.value)
+        )
 
       checkbox.setAttribute(
         'aria-label',
@@ -275,6 +321,178 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
       })
 
       fieldset.append(label)
+    })
+
+    return fieldset
+  }
+
+  /**
+   * Creates controls for validation rules that require a value.
+   * 
+   * @param {object} field - The field to configure.
+   * @returns {HTMLFieldElement}
+   */
+  function createParameterizedValidationRules(field) {
+    const fieldset = document.createElement('fieldset')
+    const legend = document.createElement('legend')
+    
+    legend.textContent = 'Parameterized validation rules'
+    fieldset.classList.add('parameterized-rules')
+    fieldset.append(legend)
+
+    const allowedRules =
+      PARAMETERIZED_RULES_BY_FIELD_TYPE[field.type] ?? []
+
+    PARAMETERIZED_RULES.forEach(rule => {
+      if (!allowedRules.includes(rule.value)) {
+        return
+      }
+
+      const existingRule = field.validationRules.find(
+        configuredRule => getRuleName(configuredRule) === rule.value
+      )
+
+      const label = document.createElement('label')
+      label.append(document.createTextNode(`${rule.label}: `))
+
+      if (
+        rule.value === 'MinLengthRule' ||
+        rule.value === 'MaxLengthRule'
+      ) {
+        const input = document.createElement('input')
+        input.type = 'number'
+        input.min = '0'
+        input.step = '1'
+
+        const isPasswordMinLength =
+          field.type === 'password' &&
+          rule.value === 'MinLengthRule'
+
+        input.value = existingRule
+          ? existingRule.value
+          : isPasswordMinLength
+            ? 10
+            : ''
+
+        input.setAttribute('aria-label', `${rule.label} for ${field.label}`)
+
+        input.addEventListener('change', () => {
+          if (input.value === '') {
+            if (isPasswordMinLength) {
+              showError('Password minimum length cannot be lower than 10.')
+              input.value = existingRule ? existingRule.value : 10
+              return
+            }
+
+            updateField(field.id, {
+              validationRules: field.validationRules.filter(
+                configuredRule =>
+                  getRuleName(configuredRule) !== rule.value
+              )
+            })
+
+            return
+          }
+
+          const value = Number(input.value)
+          const minimumAllowed = isPasswordMinLength ? 10 : 0
+
+          if (!Number.isInteger(value) ||
+            value < minimumAllowed) {
+            showError(
+              `${rule.label} must be at least ${minimumAllowed}.`
+            )
+            input.value = existingRule
+              ? existingRule.value
+              : isPasswordMinLength
+                ? 10
+                : 0
+            return
+          }
+
+          const validationRules = field.validationRules.filter(
+            configuredRule =>
+              getRuleName(configuredRule) !== rule.value
+          )
+
+          validationRules.push({
+            name: rule.value,
+            value
+          })
+
+          updateField(field.id, { validationRules })
+        })
+
+        label.append(input)
+      } else if (rule.value === 'MatchingFieldsRule') {
+        const select = document.createElement('select')
+        select.setAttribute(
+          'aria-label',
+          `${rule.label} for ${field.label}`
+        )
+
+        const emptyOption = document.createElement('option')
+        emptyOption.value = ''
+        emptyOption.textContent = 'Do not match another field'
+        select.append(emptyOption)
+
+        formModel.getFields()
+          .filter(otherField => otherField.id !== field.id)
+          .forEach(otherField => {
+            const option = document.createElement('option')
+            option.value = otherField.id
+            option.textContent = otherField.label
+            select.append(option)
+          })
+
+        select.value = existingRule ? existingRule.value : ''
+
+        select.addEventListener('change', () => {
+          const validationRules = field.validationRules.filter(
+            configuredRule =>
+              getRuleName(configuredRule) !== rule.value
+          )
+
+          if (select.value !== '') {
+            validationRules.push({
+              name: rule.value,
+              value: select.value
+            })
+          }
+
+          updateField(field.id, { validationRules })
+        })
+
+        label.append(select)
+      }
+
+      fieldset.append(label)
+    })
+
+    return fieldset
+  }
+
+  function createPasswordRequirements() {
+    const fieldset = document.createElement('fieldset')
+    fieldset.classList.add('password-requirements')
+    const legend = document.createElement('legend')
+    legend.textContent = 'Password requirements'
+
+    const requirements = [
+      '10 characters',
+      'One uppercase letter',
+      'One lowercase letter',
+      'One number',
+      'One special character',
+      'No spaces'
+    ]
+
+    fieldset.append(legend)
+
+    requirements.forEach(requirement => {
+      const paragraph = document.createElement('p')
+      paragraph.textContent = `🔒 ${requirement}`
+      fieldset.append(paragraph)
     })
 
     return fieldset
@@ -327,8 +545,13 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
           createTypeSelect(field),
           createRequiredCheckbox(field),
           createRemoveButton(field),
-          createValidationRules(field)
+          createParameterizedValidationRules(field),
         )
+        if (field.type === 'password') {
+          item.append(createPasswordRequirements())
+        }
+
+        item.append(createValidationRules(field))
 
         list.append(item)
       })
