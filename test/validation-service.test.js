@@ -8,7 +8,7 @@ test('accepts valid input', () => {
   const fields = [
     {
       id: 'email',
-      label: 'Email',
+      label: 'EmailRule',
       type: 'email',
       required: true,
       validationRules: ['EmailRule']

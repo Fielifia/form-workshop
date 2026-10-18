@@ -10,6 +10,19 @@ export const ALLOWED_FIELD_TYPES = [
   'date'
 ]
 
+const ALLOWED_VALIDATION_RULES = [
+  'EmailRule',
+  'OnlyLettersRule',
+  'OnlyDigitsRule',
+  'UppercaseRule',
+  'LowercaseRule',
+  'SpecialCharacterRule',
+  'NoCodeOrLinksRule',
+  'MinLengthRule',
+  'MaxLengthRule',
+  'MatchingFieldsRule'
+]
+
 /**
  * Creates a configurable form model independent of the user interface.
  * 
@@ -172,16 +185,30 @@ function validateField(field) {
     throw new TypeError('Validation rules must be an array.')
   }
 
+  const ruleNames = field.validationRules.map(rule =>
+  typeof rule === 'string' ? rule : rule?.name
+  )
+  
+  for (const ruleName of ruleNames) {
+    if (!ALLOWED_VALIDATION_RULES.includes(ruleName)) {
+      throw new TypeError(
+        `Unsupported validation rule: "${ruleName}".`
+      )
+    }
+  }
+
+  if (new Set(ruleNames).size !== ruleNames.length) {
+    throw new TypeError(
+      `A field cannot contain duplicate validation rules.`
+    )
+  }
+
   const validRule = rule => {
-    if (typeof rule == 'string') {
+    if (typeof rule === 'string') {
       return rule.trim() !== ''
     }
 
     if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
-      return false
-    }
-
-    if (typeof rule.name !== 'string' || rule.name.trim() === '') {
       return false
     }
 
@@ -193,7 +220,8 @@ function validateField(field) {
     }
 
     if (rule.name === 'MatchingFieldsRule') {
-      return typeof rule.value === 'string' && rule.value.trim() !== ''
+      return typeof rule.value === 'string' &&
+      rule.value.trim() !== ''
     }
 
     return false

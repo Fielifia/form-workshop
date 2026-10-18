@@ -10,6 +10,51 @@ const AVAILABLE_VALIDATION_RULES = [
   { value: 'NoCodeOrLinksRule', label: 'No code or links' }
 ]
 
+const PARAMETERIZED_RULES = [
+  { value: 'MinLengthRule', label: 'Minimum length' },
+  { value: 'MaxLengthRule', label: 'Maximum length' },
+  { value: 'MatchingFieldsRule', label: 'Match another field' }
+]
+
+const FIELD_RULES = {
+  text: {
+    validation: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  textarea: {
+    validation: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  password: {
+    validation: [],
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  number: {
+    validation: ['OnlyDigitsRule'],
+    parameterized: []
+  },
+  email: {
+    validation: ['EmailRule'],
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  tel: {
+    validation: [],
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  url: {
+    validation: [],
+    parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
+  },
+  checkbox: {
+    validation: [],
+    parameterized: []
+  },
+  date: {
+    validation: [],
+    parameterized: []
+  }
+}
+
 const RULE_CONFLICTS = {
   OnlyDigitsRule: [
     'OnlyLettersRule',
@@ -38,24 +83,50 @@ const DISABLED_RULES = {
   ]
 }
 
-const RULES_BY_FIELD_TYPE = {
-  text: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
-  textarea: AVAILABLE_VALIDATION_RULES.map(rule => rule.value),
-  password: [
-    'OnlyLettersRule',
-    'OnlyDigitsRule',
-    'UppercaseRule',
-    'LowercaseRule',
-    'SpecialCharacterRule',
-    'NoCodeOrLinksRule'
-  ],
-  number: ['OnlyDigitsRule'],
-  email: ['EmailRule'],
-  tel: [],
-  url: [],
-  checkbox: [],
-  date: [],
+const PASSWORD_REQUIRED_RULES = [
+  'UppercaseRule',
+  'LowercaseRule',
+  'SpecialCharacterRule'
+]
 
+const PASSWORD_MIN_LENGTH = 10
+
+/**
+ * Returns the name of a validation rule.
+ * 
+ * Supports both simple string rules and parameterized rule objects.
+ *
+ * @param {string | {name: string, value: *}} rule - The validation rule.
+ * @return {string}  The rule name.
+ */
+function getRuleName(rule) {
+  return typeof rule === 'string' ? rule : rule.name
+}
+
+/**
+ * Returns the rules supported by a field type.
+ * 
+ * @param {string} fieldType - The type of field.
+ * @returns {{validation: string[], parameterized: string[]}}
+ * The available validation and parameterized rule names.
+ */
+function getFieldRules(fieldType) {
+  return FIELD_RULES[fieldType] ?? {
+    validation: [],
+    parameterized: []
+  }
+}
+
+/**
+ * Creates a DOM element with a text label.
+ * 
+ * @param {string} text - The text to display
+ * @returns {HTMLLabelElement} The created label element
+ */
+function createLabel(text) {
+  const label = document.createElement('label')
+  label.append(document.createTextNode(text))
+  return label
 }
 
 /**
@@ -65,9 +136,13 @@ const RULES_BY_FIELD_TYPE = {
  * Form data is managed by the supplied form model.
  * 
  * @param {object} formModel - The model that manages the form fields.
+ * @param {Function} onFieldsChange - Callback invoked when fields change.
  * @returns {void}
  */
-export function createFieldEditor(formModel, onFieldsChange = () => { }) {
+export function createFieldEditor(
+  formModel,
+  onFieldsChange = () => { }
+) {
   const editor = document.querySelector('#field-editor')
 
   if (!editor) {
@@ -91,7 +166,7 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   }
 
   /**
-   * Updates a field, refreshes the editor and handles errors.
+   * Updates a field and refreshes the editor.
    * 
    * @param {string} fieldId - The ID of the field to update.
    * @param {object} changes - The properties to update.
@@ -153,13 +228,18 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
     select.value = field.type
 
     select.addEventListener('change', () => {
-      const allowedRules = RULES_BY_FIELD_TYPE[select.value] ?? []
-      const validationRules = field.validationRules.filter(
-        rule => allowedRules.includes(rule)
-      )
+      const fieldType = select.value
+      const rules = getFieldRules(fieldType)
+
+      const validationRules = field.validationRules.filter(rule => {
+        const ruleName = getRuleName(rule)
+
+        return rules.validation.includes(ruleName) ||
+          rules.parameterized.includes(ruleName)
+      })
 
       updateField(field.id, {
-        type: select.value,
+        type: fieldType,
         validationRules
       })
     })
@@ -229,11 +309,14 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   function createValidationRules(field) {
     const fieldset = document.createElement('fieldset')
     const legend = document.createElement('legend')
+
     legend.textContent = 'Validation rules'
     fieldset.append(legend)
 
-    const allowedRules = RULES_BY_FIELD_TYPE[field.type] ?? []
-    fieldset.disabled = allowedRules.length === 0
+    const rules = getFieldRules(field.type)
+    const isPassword = field.type === 'password'
+
+    fieldset.disabled = rules.validation.length === 0
 
     AVAILABLE_VALIDATION_RULES.forEach(rule => {
       const label = document.createElement('label')
@@ -241,12 +324,22 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
 
       checkbox.type = 'checkbox'
       checkbox.value = rule.value
-      checkbox.checked = field.validationRules.includes(rule.value)
 
-      checkbox.disabled = !allowedRules.includes(rule.value) ||
+      const isPasswordRequiredRule =
+        isPassword && PASSWORD_REQUIRED_RULES.includes(rule.value)
+
+      checkbox.checked = isPasswordRequiredRule ||
         field.validationRules.some(
-        selectedRule => DISABLED_RULES[selectedRule]?.includes(rule.value)
-      )
+          selectedRule => getRuleName(selectedRule) === rule.value)
+
+      checkbox.disabled = isPasswordRequiredRule ||
+        !rules.validation.includes(rule.value) ||
+        field.validationRules.some(selectedRule => {
+          const selectedRuleName = getRuleName(selectedRule)
+
+          return DISABLED_RULES[selectedRuleName]?.includes(rule.value)
+        }
+        )
 
       checkbox.setAttribute(
         'aria-label',
@@ -260,12 +353,15 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
 
       checkbox.addEventListener('change', () => {
         let validationRules = field.validationRules.filter(
-          existingRule => existingRule !== rule.value
+          selectedRule => getRuleName(selectedRule) !== rule.value
         )
 
         if (checkbox.checked) {
-          validationRules = validationRules.filter(
-            existingRule => !RULE_CONFLICTS[rule.value]?.includes(existingRule)
+          validationRules = validationRules.filter(selectedRule => {
+            const selectedRuleName = getRuleName(selectedRule)
+
+            return !RULE_CONFLICTS[rule.value]?.includes(selectedRuleName)
+          }
           )
 
           validationRules.push(rule.value)
@@ -281,7 +377,236 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   }
 
   /**
-   * Creates a new field with default settings.
+   * Creates an input for a minimum or maximum length rule.
+   * 
+   * Password fields must have a minimum length of PASSWORD_MIN_LENGTH.
+   * 
+   * @param {object} field - The field to configure.
+   * @param {object} rule - The rule configuration.
+   * @param {object | undefined} existingRule -
+   * The currently configured rule, if one exists.
+   * @returns {HTMLLabelElement} The label containing the numeric input.
+   */
+  function createLengthRuleInput(field, rule, existingRule) {
+    const label = createLabel(`${rule.label}: `)
+    const input = document.createElement('input')
+
+    input.type = 'number'
+    input.min = '0'
+    input.step = '1'
+
+    const isPasswordMinLength =
+      field.type === 'password' &&
+      rule.value === 'MinLengthRule'
+
+    const defaultValue = isPasswordMinLength
+      ? PASSWORD_MIN_LENGTH
+      : ''
+
+    input.value = existingRule ? existingRule.value : defaultValue
+    input.setAttribute(
+      'aria-label',
+      `${rule.label} for ${field.label}`
+    )
+
+    input.addEventListener('change', () => {
+      if (input.value === '') {
+        if (isPasswordMinLength) {
+          showError(
+            `Password minimum length must be at least ${PASSWORD_MIN_LENGTH}.`
+          )
+          input.value = existingRule
+            ? existingRule.value
+            : PASSWORD_MIN_LENGTH
+          return
+        }
+
+        removeParameterizedRule(field, rule.value)
+
+        return
+      }
+
+      const value = Number(input.value)
+      const minimumAllowed = isPasswordMinLength
+        ? PASSWORD_MIN_LENGTH
+        : 0
+
+      if (!Number.isInteger(value) ||
+        value < minimumAllowed) {
+        showError(
+          `${rule.label} must be at least ${minimumAllowed}.`
+        )
+
+        input.value = existingRule
+          ? existingRule.value
+          : defaultValue
+
+        return
+      }
+
+      const validationRules = field.validationRules.filter(
+        configuredRule => getRuleName(configuredRule) !== rule.value
+      )
+
+      validationRules.push({
+        name: rule.value,
+        value
+      })
+
+      updateField(field.id, { validationRules })
+    })
+
+    label.append(input)
+    return label
+  }
+
+  /**
+   * Creates a select element for choosing another field to match.
+   * 
+  * @param {object} field - The field to configure.
+  * @param {object} rule - The rule configuration.
+  * @param {object | undefined} existingRule -
+  * The currently configured rule, if one exists.
+  * @returns {HTMLLabelElement} The label containing the select element.
+  */
+  function createMatchingFieldsSelect(field, existingRule) {
+    const label = createLabel('Match another field: ')
+    const select = document.createElement('select')
+
+    select.setAttribute(
+      'aria-label',
+      `Match another field for ${field.label}`
+    )
+
+    const emptyOption = document.createElement('option')
+    emptyOption.value = ''
+    emptyOption.textContent = 'Do not match another field'
+    select.append(emptyOption)
+
+    formModel.getFields()
+      .filter(otherField => otherField.id !== field.id)
+      .forEach(otherField => {
+        const option = document.createElement('option')
+        option.value = otherField.id
+        option.textContent = otherField.label
+        select.append(option)
+      })
+
+    select.value = existingRule ? existingRule.value : ''
+
+    select.addEventListener('change', () => {
+      const validationRules = field.validationRules.filter(
+        configuredRule =>
+          getRuleName(configuredRule) !== 'MatchingFieldsRule'
+      )
+
+      if (select.value !== '') {
+        validationRules.push({
+          name: 'MatchingFieldsRule',
+          value: select.value
+        })
+      }
+
+      updateField(field.id, { validationRules })
+    })
+
+    label.append(select)
+    return label
+  }
+
+  /**
+   * Removes a parameterized rule from a field.
+   * 
+   * @param {object} field - The field to configure.
+   * @param {string} ruleName - The name of the rule to remove.
+   * @returns {void}
+   */
+  function removeParameterizedRule(field, ruleName) {
+    const validationRules = field.validationRules.filter(
+      rule => getRuleName(rule) !== ruleName
+    )
+
+    updateField(field.id, { validationRules })
+  }
+
+  /**
+   * Creates controls for configuring parameterized validation rules.
+   * 
+   * @param {object} field - The field to configure.
+   * @returns {HTMLFieldSetElement} The fieldset containing the controls.
+   */
+  function createParameterizedValidationRules(field) {
+    const fieldset = document.createElement('fieldset')
+    const legend = document.createElement('legend')
+
+    legend.textContent = 'Parameterized validation rules'
+    fieldset.classList.add('parameterized-rules')
+    fieldset.append(legend)
+
+    const allowedRules = getFieldRules(field.type).parameterized
+
+    PARAMETERIZED_RULES.forEach(rule => {
+      if (!allowedRules.includes(rule.value)) {
+        return
+      }
+
+      const existingRule = field.validationRules.find(
+        configuredRule => getRuleName(configuredRule) === rule.value
+      )
+
+      if (
+        rule.value === 'MinLengthRule' ||
+        rule.value === 'MaxLengthRule'
+      ) {
+        fieldset.append(
+          createLengthRuleInput(field, rule, existingRule)
+        )
+      } else if (rule.value === 'MatchingFieldsRule') {
+        fieldset.append(
+          createMatchingFieldsSelect(field, existingRule)
+        )
+      }
+    })
+
+    return fieldset
+  }
+
+  /**
+   * Creates a list of the fixed password requirements.
+   * 
+   * Actual password validation is handled by the password module.
+   * 
+   * @returns {HTMLFieldSetElement} The fieldset displaying the requirements.
+   */
+  function createPasswordRequirements() {
+    const fieldset = document.createElement('fieldset')
+    const legend = document.createElement('legend')
+
+    fieldset.classList.add('password-requirements')
+    legend.textContent = 'Password requirements'
+
+    const requirements = [
+      '10 characters',
+      'One uppercase letter',
+      'One lowercase letter',
+      'One number',
+      'One special character',
+      'No spaces'
+    ]
+
+    fieldset.append(legend)
+
+    requirements.forEach(requirement => {
+      const paragraph = document.createElement('p')
+      paragraph.textContent = `🔒 ${requirement}`
+      fieldset.append(paragraph)
+    })
+
+    return fieldset
+  }
+
+  /**
+   * Creates and adds a new text field, then refreshes the editor.
    * 
    * @returns {void}
    */
@@ -300,8 +625,9 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
   }
 
   /**
-   * Renders the current fields or an empty-state message,
-   * and provides a button for adding a field.
+   * Renders the configured fields and the button for adding a field.
+   * 
+   * Displays an empty-state message when no fields exist.
    * 
    * @returns {void}
    */
@@ -327,9 +653,14 @@ export function createFieldEditor(formModel, onFieldsChange = () => { }) {
           createTypeSelect(field),
           createRequiredCheckbox(field),
           createRemoveButton(field),
-          createValidationRules(field)
+          createParameterizedValidationRules(field),
         )
 
+        if (field.type === 'password') {
+          item.append(createPasswordRequirements())
+        }
+
+        item.append(createValidationRules(field))
         list.append(item)
       })
 

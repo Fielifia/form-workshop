@@ -37,6 +37,15 @@ const RULE_FACTORIES = {
  * @throws {Error} If the rule is unsupported.
  */
 function createRule(configuredRule) {
+  if (
+    typeof configuredRule !== 'string' &&
+    (!configuredRule ||
+      typeof configuredRule !== 'object' ||
+      Array.isArray(configuredRule))
+  ) {
+    throw new TypeError('Invalid rule configuration.')
+  }
+
   const name = typeof configuredRule === 'string'
     ? configuredRule
     : configuredRule?.name
@@ -50,6 +59,20 @@ function createRule(configuredRule) {
   const value = typeof configuredRule === 'object'
     ? configuredRule.value
     : undefined
+  
+  if (
+    (name === 'MinLengthRule' || name === 'MaxLengthRule') &&
+    (!Number.isInteger(value) || value < 0)
+  ) {
+    throw new TypeError(`Invalid configuration for ${name}.`)
+  }
+
+  if (
+    name === 'MatchingFieldsRule' &&
+    (typeof value !== 'string' || value.trim() === '')
+  ) {
+    throw new TypeError(`Invalid configuration for ${name}.`)
+  }
 
   return factory(value)
 }
