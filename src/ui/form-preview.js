@@ -277,13 +277,13 @@ export function createFormPreview(formModel) {
         result.errors
       )
 
+      feedback.className = result.valid
+        ? 'validation-feedback validation-success'
+        : 'validation-feedback validation-error'
+
       feedback.textContent = result.valid
         ? 'The form is valid'
         : 'Please correct the errors above.'
-
-      feedback.className = result.valid
-        ? 'validation-success'
-        : 'validation-error'
     })
 
     preview.append(form)
