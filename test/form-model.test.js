@@ -10,7 +10,7 @@ function makeField(overrides = {}) {
     label: 'Email',
     type: 'email',
     required: true,
-    validationRules: ['email'],
+    validationRules: ['EmailRule'],
     ...overrides
   }
 }
@@ -124,14 +124,14 @@ test('returns copies of parameterized validation rules', () => {
 
 test('stores field validation rules independently', () => {
   const form = createFormModel()
-  const rules = ['email']
+  const rules = ['EmailRule']
   form.addField(makeField({ validationRules: rules }))
 
-  rules.push('required')
+  rules.push('RequiredRule')
 
   assert.deepEqual(
     form.getFields()[0].validationRules,
-    ['email'])
+    ['EmailRule'])
 })
 
 test('rejects invalid field configurations', () => {
@@ -158,7 +158,7 @@ test('rejects invalid field configurations', () => {
   )
 
   assert.throws(
-    () => form.addField(makeField({ validationRules: 'email' })),
+    () => form.addField(makeField({ validationRules: 'EmailRule' })),
     /must be an array/
   )
 
