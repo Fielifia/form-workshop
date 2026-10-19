@@ -113,3 +113,39 @@ test('should include configured validation rules in exported HTML', () => {
   assert.ok(html.includes('MinLengthRule'))
   assert.ok(html.includes('"value":5'))
 })
+
+test('generates syntactically valid JavaScript', () => {
+  const html = generateHTML([])
+  const script = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1]
+
+  assert.doesNotThrow(() => {
+    new Function(script)
+  })
+})
+
+test('includes matching field validation in exported JavaScript', () => {
+  const html = generateHTML([
+    {
+      id: 'password',
+      label: 'Password',
+      type: 'password',
+      required: true,
+      validationRules: []
+    },
+    {
+      id: 'confirm-password',
+      label: 'Confirm password',
+      type: 'password',
+      required: true,
+      validationRules: [
+        {
+          name: 'MatchingFieldsRule',
+          value: 'password'
+        }
+      ] 
+    }
+  ])
+
+  assert.match(html, /MatchingFieldsRule/)
+  assert.match(html, /formData\[rule\.value\]/)
+})

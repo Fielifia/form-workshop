@@ -59,6 +59,9 @@ function validateRule(rule, value, formData) {
       /(https?:\\/\\/[^\\s]+|www\\.[^\\s]+|[a-zA-Z0-9-]+\\.[a-zA-Z]{2,})/i.test(value)
     )
 
+  case 'MatchingFieldsRule':
+    return value === formData[rule.value]
+
   default:
     return true
   }
