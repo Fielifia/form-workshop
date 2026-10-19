@@ -27,7 +27,7 @@ const fieldConfigurations = JSON.parse(
   document.getElementById('validation-rules').textContent
 )
 
-function validateRule(rule, value) {
+function validateRule(rule, value, formData) {
   switch (rule.name) {
   case 'EmailRule':
     return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)
@@ -64,11 +64,41 @@ function validateRule(rule, value) {
   }
 }
 
+function validatePassword(password) {
+  const specialChars = '!@#£$%/\\{([)]=}<?+~^*-_.:|>'
+
+  const hasUppercase = [...password].some(
+    character => character === character.toUpperCase() &&
+      character !== character.toLowerCase()
+  )
+
+  const hasLowercase = [...password].some(
+    character => character === character.toLowerCase() &&
+      character !== character.toUpperCase()
+  )
+
+  return password.length >= 10 &&
+    hasUppercase &&
+    hasLowercase &&
+    /[0-9]/.test(password) &&
+    [...password].some(character => specialChars.includes(character)) &&
+    !password.includes(' ')
+}
+
 form.addEventListener('submit', (event) => {
   event.preventDefault()
 
   const fields = Array.from(form.querySelectorAll('.preview-field'))
   let isValid = true
+  const formData = {}
+
+  fields.forEach((field) => {
+    const input = field.querySelector('input, textarea')
+
+    formData[input.id] = input.type === 'checkbox'
+      ? input.checked
+      : input.value.trim()
+  })
 
   feedback.textContent = ''
   feedback.className = ''
@@ -93,9 +123,13 @@ form.addEventListener('submit', (event) => {
 
     if (input.required && !value) {
       message = 'This field is required.'
-    } else if (configuration && value !== '') {
+    } else if (input.type === 'password' && value !== '') {
+      if (!validatePassword(String(value))) {
+        message = 'Password does not meet all requirements.'
+      }
+     } else if (configuration && value !== '') {
       const failedRule = configuration.validationRules.find(
-        rule => !validateRule(rule, String(value))
+        rule => !validateRule(rule, String(value), formData)
       )
 
       if (failedRule) {
@@ -106,7 +140,8 @@ form.addEventListener('submit', (event) => {
           UppercaseRule: 'This field must contain an uppercase letter.',
           LowercaseRule: 'This field must contain a lowercase letter.',
           SpecialCharacterRule: 'This field must contain a special character.',
-          NoCodeOrLinksRule: 'This field may not contain code or links.'
+          NoCodeOrLinksRule: 'This field may not contain code or links.',
+          MatchingFieldsRule: 'The fields do not match.'
         }
 
         if (failedRule.name === 'MinLengthRule') {
