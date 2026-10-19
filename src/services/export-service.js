@@ -69,7 +69,7 @@ function validateRule(rule, value, formData) {
 
 function validatePassword(password) {
   const specialChars = '!@#£$%/\\\\{([)]=}<?+~^*-_.:|>'
-  
+
   const hasUppercase = [...password].some(
     character => character === character.toUpperCase() &&
       character !== character.toLowerCase()
@@ -317,6 +317,18 @@ export function generateHTML(fields) {
       margin-top: 1.5rem;
       color: #424b57;
       font-size: .9rem;
+    }
+
+    .field-requirements {
+      margin: .25rem 0 .5rem;
+      padding-left: 1.25rem;
+      line-height: 1.2;
+      font-size: .9rem;
+    }
+
+    .field-requirements li {
+      margin: 0;
+      padding: 0;
     }
   </style>
 </head>
