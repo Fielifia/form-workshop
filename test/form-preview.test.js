@@ -183,3 +183,93 @@ test('continues to accept valid text fields', () => {
     preview.querySelector('form > div[aria-live="polite"]:last-child').textContent,
     'The form is valid')
 })
+
+test('displays an error for an invalid email address', () => {
+  formModel.addField({
+    id: 'email',
+    label: 'Email',
+    type: 'email',
+    required: true,
+    validationRules: ['EmailRule']
+  })
+
+  const preview = createPreview()
+  const input = preview.querySelector('#email')
+
+  input.value = 'invalid-email'
+
+  preview.querySelector('form').dispatchEvent(
+    new dom.window.Event('submit', {
+      bubbles: true,
+      cancelable: true
+    })
+  )
+
+  assert.equal(input.getAttribute('aria-invalid'), 'true')
+  assert.equal(
+    preview.querySelector('#email-error').hidden,
+    false
+  )
+})
+
+test('clears validation errors after correcting the input', () => {
+  formModel.addField({
+    id: 'name',
+    label: 'Name',
+    type: 'text',
+    required: true,
+    validationRules: []
+  })
+
+  const preview = createPreview()
+  const input = preview.querySelector('#name')
+
+  input.value = 'Name'
+
+  preview.querySelector('form').dispatchEvent(
+    new dom.window.Event('submit', {
+      bubbles: true,
+      cancelable: true
+    })
+  )
+
+  assert.equal(input.hasAttribute('aria-invalid'), false)
+  assert.equal(preview.querySelector('#name-error').hidden, true)
+  assert.equal(
+    preview.querySelector('[aria-live="polite"]').textContent,
+    'The form is valid'
+  )
+})
+
+test('renders updated field configuration', () => {
+  formModel.addField({
+    id: 'name',
+    label: 'Name',
+    type: 'text',
+    required: true,
+    validationRules: []
+  })
+
+  const formPreview = createFormPreview(formModel)
+  const preview = document.querySelector('#form-preview')
+
+  assert.equal(
+    preview.querySelector('label').textContent,
+    'Name *')
+
+  formModel.updateField('name', {
+    label: 'Full name',
+    required: false
+  })
+
+  formPreview.render()
+
+  assert.equal(
+    preview.querySelector('label').textContent,
+    'Full name')
+
+  assert.equal(
+    preview.querySelector('input').required,
+    false
+  )
+})
