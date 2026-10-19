@@ -20,47 +20,113 @@ function escapeHTML(value) {
  */
 function generateValidationScript() {
   return `
-  const form = document.getElementById('exported-form')
-  const feedback = document.getElementById('validation-feedback')
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault()
+const form = document.getElementById('exported-form')
+const feedback = document.getElementById('validation-feedback')
+const fieldConfigurations = JSON.parse(
+  document.getElementById('validation-rules').textContent
+)
 
-    const fields = Array.from(form.querySelectorAll('.preview-field'))
-    let isValid = true
+function validateRule(rule, value) {
+  switch (rule.name) {
+  case 'EmailRule':
+    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)
 
-    feedback.textContent = ''
-    feedback.className = ''
+  case 'OnlyLettersRule':
+    return /^\\p{L}*$/u.test(value)
 
-    fields.forEach((field) => {
-      const input = field.querySelector('input, textarea')
-      const error = field.querySelector('.field-error')
+  case 'OnlyDigitsRule':
+    return /^\\d+$/.test(value)
 
-      error.textContent = ''
-      error.hidden = true
-      input.removeAttribute('aria-invalid')
+  case 'UppercaseRule':
+    return /\\p{Lu}/u.test(value)
 
-      const value = input.type === 'checkbox'
-        ? input.checked
-        : input.value.trim()
-      
-      let message = ''
+  case 'LowercaseRule':
+    return /\\p{Ll}/u.test(value)
 
-      if (input.required && !value) {
-        message = 'This field is required.'
-      } else if (input.type === 'email' && value &&
-        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) {
-        message = 'Please enter a valid email address.'
-      }
+  case 'SpecialCharacterRule':
+    return /[^\\p{L}\\d\\s]/u.test(value)
 
-      if (message) {
-        isValid = false
-        error.textContent = message
-        error.hidden = false
-        input.setAttribute('aria-invalid', 'true')
+  case 'MinLengthRule':
+    return value.length >= rule.value
+
+  case 'MaxLengthRule':
+    return value.length <= rule.value
+
+  case 'NoCodeOrLinksRule':
+    return !(
+      /<[^>]*>|javascript:/i.test(value) ||
+      /(https?:\\/\\/[^\\s]+|www\\.[^\\s]+|[a-zA-Z0-9-]+\\.[a-zA-Z]{2,})/i.test(value)
+    )
+
+  default:
+    return true
+  }
+}
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault()
+
+  const fields = Array.from(form.querySelectorAll('.preview-field'))
+  let isValid = true
+
+  feedback.textContent = ''
+  feedback.className = ''
+
+  fields.forEach((field) => {
+    const input = field.querySelector('input, textarea')
+    const error = field.querySelector('.field-error')
+
+    const configuration = fieldConfigurations.find(
+      item => item.id === input.id
+    )
+
+    error.textContent = ''
+    error.hidden = true
+    input.removeAttribute('aria-invalid')
+
+    const value = input.type === 'checkbox'
+      ? input.checked
+      : input.value.trim()
+
+    let message = ''
+
+    if (input.required && !value) {
+      message = 'This field is required.'
+    } else if (configuration && value !== '') {
+      const failedRule = configuration.validationRules.find(
+        rule => !validateRule(rule, String(value))
       )
+
+      if (failedRule) {
+        const messages = {
+          EmailRule: 'Please enter a valid email address.',
+          OnlyLettersRule: 'This field may only contain letters.',
+          OnlyDigitsRule: 'This field may only contain digits.',
+          UppercaseRule: 'This field must contain an uppercase letter.',
+          LowercaseRule: 'This field must contain a lowercase letter.',
+          SpecialCharacterRule: 'This field must contain a special character.',
+          NoCodeOrLinksRule: 'This field may not contain code or links.'
+        }
+
+        if (failedRule.name === 'MinLengthRule') {
+          message = 'This field must contain at least ' + failedRule.value + ' characters.'
+        } else if (failedRule.name === 'MaxLengthRule') {
+          message = 'This field may contain at most ' + failedRule.value + ' characters.'
+        } else {
+          message = messages[failedRule.name] || 'Invalid value.'
+        }
+      }
+    }
+
+    if (message) {
+      isValid = false
+      error.textContent = message
+      error.hidden = false
+      input.setAttribute('aria-invalid', 'true')
+    }
   })
-  
+
   if (isValid) {
     feedback.textContent = 'All fields are valid.'
     feedback.className = 'validation-success'
