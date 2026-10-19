@@ -86,3 +86,29 @@ test('should escape HTML in field labels', () => {
 test('should throw a TypeError when fields is not an array', () => {
   assert.throws(() => generateHTML(null), TypeError)
 })
+
+test('should include client-side validation code', () => {
+  const html = generateHTML([])
+
+  assert.ok(html.includes("addEventListener('submit'"))
+  assert.ok(html.includes('Please enter a valid email address.'))
+  assert.ok(html.includes('Please correct the errors above.'))
+})
+
+// test('should include configured validation rules in exported HTML', () => {
+//   const fields = [
+//     {
+//       id: 'username',
+//       label: 'Username',
+//       type: 'text',
+//       required: false,
+//       validationRules: [
+//         { name: 'MinLengthRule', value: 5 }
+//       ]
+//     }
+//   ]
+
+//   const html = generateHTML(fields)
+
+//   assert.ok(html.includes('MinLengthRule'))
+// })

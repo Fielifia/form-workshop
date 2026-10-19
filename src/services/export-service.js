@@ -14,6 +14,65 @@ function escapeHTML(value) {
 }
 
 /**
+ * Generated standalone client-side validation code.
+ * 
+ * @returns {string} JavaScript code for validating form fields.
+ */
+function generateValidationScript() {
+  return `
+  const form = document.getElementById('exported-form')
+  const feedback = document.getElementById('validation-feedback')
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault()
+
+    const fields = Array.from(form.querySelectorAll('.preview-field'))
+    let isValid = true
+
+    feedback.textContent = ''
+    feedback.className = ''
+
+    fields.forEach((field) => {
+      const input = field.querySelector('input, textarea')
+      const error = field.querySelector('.field-error')
+
+      error.textContent = ''
+      error.hidden = true
+      input.removeAttribute('aria-invalid')
+
+      const value = input.type === 'checkbox'
+        ? input.checked
+        : input.value.trim()
+      
+      let message = ''
+
+      if (input.required && !value) {
+        message = 'This field is required.'
+      } else if (input.type === 'email' && value &&
+        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) {
+        message = 'Please enter a valid email address.'
+      }
+
+      if (message) {
+        isValid = false
+        error.textContent = message
+        error.hidden = false
+        input.setAttribute('aria-invalid', 'true')
+      )
+  })
+  
+  if (isValid) {
+    feedback.textContent = 'All fields are valid.'
+    feedback.className = 'validation-success'
+  } else {
+    feedback.textContent = 'Please correct the errors above.'
+    feedback.className = 'validation-error'
+  }
+})
+`
+}
+
+/**
  * Generates a standalone HTML document from configured fields.
  * 
  * @param {Array<object>} fields - The configured form fields.
@@ -144,7 +203,7 @@ export function generateHTML(fields) {
     </p>
   </main>
   <script>
-  // 
+  ${generateValidationScript()}
   </script>
 </body>
 </html>`
