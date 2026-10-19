@@ -613,12 +613,12 @@ export function createFieldEditor(
     legend.textContent = 'Password requirements'
 
     const requirements = [
-      '10 characters',
-      'One uppercase letter',
-      'One lowercase letter',
-      'One number',
-      'One special character',
-      'No spaces'
+      'At least 10 characters.',
+      'Include an uppercase letter.',
+      'Include a lowercase letter.',
+      'Include a number.',
+      'Include an allowed special character.',
+      'No spaces.'
     ]
 
     fieldset.append(legend)
