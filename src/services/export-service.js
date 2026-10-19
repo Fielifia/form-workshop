@@ -126,33 +126,37 @@ form.addEventListener('submit', (event) => {
 
     if (input.required && !value) {
       message = 'This field is required.'
-    } else if (input.type === 'password' && value !== '') {
-      if (!validatePassword(String(value))) {
-        message = 'Password does not meet all requirements.'
-      }
-     } else if (configuration && value !== '') {
-      const failedRule = configuration.validationRules.find(
-        rule => !validateRule(rule, String(value), formData)
-      )
-
-      if (failedRule) {
-        const messages = {
-          EmailRule: 'Please enter a valid email address.',
-          OnlyLettersRule: 'This field may only contain letters.',
-          OnlyDigitsRule: 'This field may only contain digits.',
-          UppercaseRule: 'This field must contain an uppercase letter.',
-          LowercaseRule: 'This field must contain a lowercase letter.',
-          SpecialCharacterRule: 'This field must contain a special character.',
-          NoCodeOrLinksRule: 'This field may not contain code or links.',
-          MatchingFieldsRule: 'The fields do not match.'
+    } else {
+      if (input.type === 'password' && value !== '') {
+        if (!validatePassword(String(value))) {
+          message = 'Password does not meet all requirements.'
         }
+      }
 
-        if (failedRule.name === 'MinLengthRule') {
-          message = 'This field must contain at least ' + failedRule.value + ' characters.'
-        } else if (failedRule.name === 'MaxLengthRule') {
-          message = 'This field may contain at most ' + failedRule.value + ' characters.'
-        } else {
-          message = messages[failedRule.name] || 'Invalid value.'
+      if (!message && configuration && value !== '') {
+        const failedRule = configuration.validationRules.find(
+          rule => !validateRule(rule, String(value), formData)
+        )
+
+        if (failedRule) {
+          const messages = {
+            EmailRule: 'Please enter a valid email address.',
+            OnlyLettersRule: 'This field may only contain letters.',
+            OnlyDigitsRule: 'This field may only contain digits.',
+            UppercaseRule: 'This field must contain an uppercase letter.',
+            LowercaseRule: 'This field must contain a lowercase letter.',
+            SpecialCharacterRule: 'This field must contain a special character.',
+            NoCodeOrLinksRule: 'This field may not contain code or links.',
+            MatchingFieldsRule: 'The fields do not match.'
+          }
+
+          if (failedRule.name === 'MinLengthRule') {
+            message = 'This field must contain at least ' + failedRule.value + ' characters.'
+          } else if (failedRule.name === 'MaxLengthRule') {
+            message = 'This field may contain at most ' + failedRule.value + ' characters.'
+          } else {
+            message = messages[failedRule.name] || 'Invalid value.'
+          }
         }
       }
     }
