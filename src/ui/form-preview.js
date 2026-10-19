@@ -51,8 +51,8 @@ function createLabel(field) {
  * @param {object} field - The configured form field.
  * @returns {HTMLListElement|null} The requirement list.
  */
-function createRequirementList(field) {
-  const requirements = getFieldRequirements(field)
+function createRequirementList(field, fields) {
+  const requirements = getFieldRequirements(field, fields)
 
   if (requirements.length === 0) {
     return null
@@ -262,7 +262,7 @@ export function createFormPreview(formModel) {
 
       const label = createLabel(field)
       const input = createInput(field)
-      const requirementList = createRequirementList(field)
+      const requirementList = createRequirementList(field, fields)
       const error = createErrorElement(field)
 
       input.setAttribute('aria-describedby', error.id)
