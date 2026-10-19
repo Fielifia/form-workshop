@@ -95,20 +95,21 @@ test('should include client-side validation code', () => {
   assert.ok(html.includes('Please correct the errors above.'))
 })
 
-// test('should include configured validation rules in exported HTML', () => {
-//   const fields = [
-//     {
-//       id: 'username',
-//       label: 'Username',
-//       type: 'text',
-//       required: false,
-//       validationRules: [
-//         { name: 'MinLengthRule', value: 5 }
-//       ]
-//     }
-//   ]
+test('should include configured validation rules in exported HTML', () => {
+  const fields = [
+    {
+      id: 'username',
+      label: 'Username',
+      type: 'text',
+      required: false,
+      validationRules: [
+        { name: 'MinLengthRule', value: 5 }
+      ]
+    }
+  ]
 
-//   const html = generateHTML(fields)
+  const html = generateHTML(fields)
 
-//   assert.ok(html.includes('MinLengthRule'))
-// })
+  assert.ok(html.includes('MinLengthRule'))
+  assert.ok(html.includes('"value":5'))
+})
