@@ -409,6 +409,14 @@ export function createFieldEditor(
       `${rule.label} for ${field.label}`
     )
 
+    function getLengthRuleValue(ruleName) {
+      const configuredRule = field.validationRules.find(
+        configuredRule => getRuleName(configuredRule) === ruleName
+      )
+
+      return configuredRule ? Number(configuredRule.value) : undefined
+    }
+
     input.addEventListener('change', () => {
       if (input.value === '') {
         if (isPasswordMinLength) {
@@ -441,6 +449,25 @@ export function createFieldEditor(
           ? existingRule.value
           : defaultValue
 
+        return
+      }
+
+      const otherRuleName = rule.value === 'MinLengthRule'
+        ? 'MaxLengthRule'
+        : 'MinLengthRule'
+
+      const otherValue = getLengthRuleValue(otherRuleName)
+
+      if (
+        otherValue !== undefined &&
+        (
+          rule.value === 'MinLengthRule' && value > otherValue ||
+          rule.value === 'MaxLengthRule' && value < otherValue
+        )
+      ) {
+        showError('Maximum length cannot be less than minimum length.')
+
+        input.value = existingRule ? existingRule.value : defaultValue
         return
       }
 
