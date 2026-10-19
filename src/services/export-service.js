@@ -68,8 +68,8 @@ function validateRule(rule, value, formData) {
 }
 
 function validatePassword(password) {
-  const specialChars = '!@#£$%/\\{([)]=}<?+~^*-_.:|>'
-
+  const specialChars = '!@#£$%/\\\\{([)]=}<?+~^*-_.:|>'
+  
   const hasUppercase = [...password].some(
     character => character === character.toUpperCase() &&
       character !== character.toLowerCase()
@@ -100,7 +100,9 @@ form.addEventListener('submit', (event) => {
 
     formData[input.id] = input.type === 'checkbox'
       ? input.checked
-      : input.value.trim()
+      : input.type === 'password'
+        ? input.value
+        : input.value.trim()
   })
 
   feedback.textContent = ''
@@ -120,7 +122,9 @@ form.addEventListener('submit', (event) => {
 
     const value = input.type === 'checkbox'
       ? input.checked
-      : input.value.trim()
+      : input.type === 'password'
+        ? input.value
+        : input.value.trim()
 
     let message = ''
 

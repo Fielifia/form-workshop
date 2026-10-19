@@ -149,3 +149,37 @@ test('includes matching field validation in exported JavaScript', () => {
   assert.match(html, /MatchingFieldsRule/)
   assert.match(html, /formData\[rule\.value\]/)
 })
+
+test('exports matching fields validation logic', () => {
+  const html = generateHTML([
+    {
+      id: 'password',
+      label: 'Password',
+      type: 'text',
+      required: true,
+      validationRules: []
+    },
+    {
+      id: 'confirm-password',
+      label: 'Confirm password',
+      type: 'text',
+      required: true,
+      validationRules: [
+        {
+          name: 'MatchingFieldsRule',
+          value: 'password'
+        }
+      ]
+    }
+  ])
+
+  assert.match(html, /MatchingFieldsRule/)
+  assert.match(html, /value === formData\[rule\.value\]/)
+  assert.match(html, /The fields do not match\./)
+})
+
+test('preserves backslash as an allowed password special character', () => {
+  const html = generateHTML([])
+
+  assert.match(html, /const specialChars = .*\\/)
+})
