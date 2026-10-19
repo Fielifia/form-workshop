@@ -73,6 +73,22 @@ function generateValidationScript() {
 }
 
 /**
+ * Serializes validation rules safely for embedding in HTML.
+ * 
+ * @param {Array<object>} fields - Configured form fields.
+ * @returns {string} JSON representation of the validation rules.
+ */
+function serializeValidationRules(fields) {
+  const rules = fields.map(field => ({
+    id: field.id,
+    required: field.required,
+    validationRules: field.validationRules
+  }))
+
+  return JSON.stringify(rules).replaceAll('<', '\\u003c')
+}
+
+/**
  * Generates a standalone HTML document from configured fields.
  * 
  * @param {Array<object>} fields - The configured form fields.
@@ -100,13 +116,15 @@ export function generateHTML(fields) {
         : `<input type="${type}" id="${id}" name="${id}"${required}>`
 
     return `
-    <div class="preview-field">
-    <label for="${id}">${label}${requiredIndicator}</label>
-    ${input}
-    <p class="field-error" id="${id}-error" hidden></p>
-    </div>
-    `
+        <div class="preview-field">
+        <label for="${id}">${label}${requiredIndicator}</label>
+        ${input}
+        <p class="field-error" id="${id}-error" hidden></p>
+        </div>
+        `
   }).join('\n')
+
+  const validationRules = serializeValidationRules(fields)
 
   return `<!DOCTYPE html>
   <html lang="en">
@@ -202,6 +220,10 @@ export function generateHTML(fields) {
       This form validates your input locally. It does not submit or save data.
     </p>
   </main>
+  <script id="validation-rules" type="application/json">
+  ${validationRules}
+  </script>
+  
   <script>
   ${generateValidationScript()}
   </script>
