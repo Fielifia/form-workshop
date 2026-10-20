@@ -159,6 +159,8 @@ function setupPasswordFeedback(input, group) {
  * @returns {{valid: boolean, errors: Array<object>}} The validation result.
  */
 function validatePreviewForm(fields, values) {
+  console.log('Fields:', fields)
+  console.log('Values:', values)
   const result = validateForm(fields, values)
 
   const passwordErrors = fields.flatMap(field => {

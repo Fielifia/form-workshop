@@ -686,54 +686,53 @@ export function createFieldEditor(
       const list = document.createElement('ul')
 
 
-fields.forEach(field => {
-  const item = document.createElement('li')
+      fields.forEach(field => {
+        const item = document.createElement('li')
 
-  const matchingRule = field.validationRules.find(
-    rule => typeof rule === 'object' &&
-      rule.name === 'MatchingFieldsRule'
-  )
+        const isMatchingField = Boolean(field.matchingFieldId)
 
-  const isMatchingField = Boolean(matchingRule)
+        const matchingRule = isMatchingField
+          ? { name: 'MatchingFieldsRule', value: field.matchingFieldId }
+          : undefined
 
-  item.append(
-    createLabelInput(field)
-  )
+        item.append(
+          createLabelInput(field)
+        )
 
-  if (!isMatchingField) {
-    item.append(
-      createTypeSelect(field),
-      createRequiredCheckbox(field)
-    )
-  }
+        if (!isMatchingField) {
+          item.append(
+            createTypeSelect(field),
+            createRequiredCheckbox(field)
+          )
+        }
 
-  item.append(createRemoveButton(field))
+        item.append(createRemoveButton(field))
 
-  if (!isMatchingField && field.type === 'password') {
-    item.append(createPasswordRequirements())
-  }
+        if (!isMatchingField && field.type === 'password') {
+          item.append(createPasswordRequirements())
+        }
 
-  if (isMatchingField) {
-    item.append(
-      createMatchingFieldsSelect(field, matchingRule)
-    )
-  } else {
-    const parameterizedValidationRules =
-      createParameterizedValidationRules(field)
+        if (isMatchingField) {
+          item.append(
+            createMatchingFieldsSelect(field, matchingRule)
+          )
+        } else {
+          const parameterizedValidationRules =
+            createParameterizedValidationRules(field)
 
-    if (parameterizedValidationRules) {
-      item.append(parameterizedValidationRules)
-    }
+          if (parameterizedValidationRules) {
+            item.append(parameterizedValidationRules)
+          }
 
-    const validationRules = createValidationRules(field)
+          const validationRules = createValidationRules(field)
 
-    if (validationRules) {
-      item.append(validationRules)
-    }
-  }
+          if (validationRules) {
+            item.append(validationRules)
+          }
+        }
 
-  list.append(item)
-})
+        list.append(item)
+      })
 
 
       editor.append(list)

@@ -7,17 +7,16 @@
 export function getFieldRequirements(field, fields = []) {
   const requirements = []
 
-  const matchingRule = field.validationRules.find(rule =>
-    (typeof rule === 'string' ? rule : rule.name) === 'MatchingFieldsRule'
-  )
+  const matchingRule = field.matchingFieldId
+    ? { value: field.matchingFieldId }
+    : field.validationRules.find(rule =>
+      (typeof rule === 'string' ? rule : rule.name) ===
+      'MatchingFieldsRule'
+    )
 
   if (matchingRule) {
-    const matchingFieldId = typeof matchingRule === 'string'
-      ? undefined
-      : matchingRule.value
-
     const matchingField = fields.find(
-      item => item.id === matchingFieldId
+      item => item.id === matchingRule.value
     )
 
     return [

@@ -106,6 +106,12 @@ function createValidation(fields) {
       field.addRule(createRule(configuredRule))
     })
 
+    if (config.matchingFieldId) {
+      field.addRule(
+        new MatchingFieldsRule(config.matchingFieldId)
+      )
+    }
+
     validation.addField(field)
   })
 
