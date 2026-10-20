@@ -160,6 +160,10 @@ button:focus-visible {
   border-radius: 6px;
 }
 
+#field-editor>ul>li>fieldset.disabled-fieldset {
+  display: none;
+}
+
 #field-editor li fieldset legend {
   padding: 0 .4rem;
 }
@@ -200,19 +204,16 @@ button:focus-visible {
 #form-preview select {
   box-sizing: border-box;
   width: 100%;
-  max-width: 450px;
   padding: .65rem;
   font: inherit;
 }
 
 /* ====== EDITOR LAYOUT IMPROVEMENTS ====== */
 
-/* Give each field editor a little more breathing room */
 #field-editor li {
   gap: 1rem;
 }
 
-/* Keep field controls aligned and prevent unnecessary shrinking */
 #field-editor li>input[type="text"] {
   flex: 1 1 240px;
 }
@@ -221,7 +222,6 @@ button:focus-visible {
   flex: 0 1 150px;
 }
 
-/* Parameterized rules: label above input */
 #field-editor .parameterized-rules {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -242,7 +242,6 @@ button:focus-visible {
   min-width: 0;
 }
 
-/* Password requirements: evenly spaced items */
 #field-editor li fieldset:has(legend) {
   align-content: start;
 }
@@ -252,7 +251,6 @@ button:focus-visible {
   line-height: 1.5;
 }
 
-/* Validation checkboxes: align text and controls consistently */
 #field-editor li fieldset:not(.parameterized-rules) label {
   align-items: flex-start;
   line-height: 1.4;
@@ -262,7 +260,6 @@ button:focus-visible {
   margin: .15rem 0 0;
 }
 
-/* Disabled rules should remain readable */
 #field-editor li fieldset:disabled {
   color: #424b57;
   opacity: 1;
@@ -272,39 +269,39 @@ button:focus-visible {
   cursor: not-allowed;
 }
 
-/* Compact password requirements */
-#field-editor .password-requirements {
+#field-editor .password-requirements,
+.field-requirements {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .4rem .75rem;
+  margin: 0;
   padding: .6rem .8rem .75rem;
 }
 
-#field-editor .password-requirements legend {
+#field-editor .password-requirements legend,
+.field-requirements legend {
   font-size: .9rem;
 }
 
-#field-editor .password-requirements p {
+#field-editor .password-requirements p,
+.field-requirements p {
+  display: flex;
+  min-width: 0;
   margin: 0;
   font-size: .85rem;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
-.field-requirements {
-  margin: .25rem 0 .5rem;
-  padding-left: 1.25rem;
-  line-height: 1.2;
-  font-size: .9rem;
-}
-
-.field-requirements li {
-  margin: 0;
-  padding: 0;
+#field-editor .password-requirements p::before,
+.field-requirements p::before {
+  flex: 0 0 .6rem;
+  content: "• ";
 }
 
 /* ====== RESPONSIVE LAYOUT ====== */
 
-@media (max-width: 700px) {
+@media (max-width: 600px) {
 
   .welcome,
   .form-editor,
@@ -312,11 +309,9 @@ button:focus-visible {
     padding: 1.25rem;
   }
 
-  #field-editor .parameterized-rules {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  #field-editor .password-requirements {
+  #field-editor .parameterized-rules,
+  #field-editor .password-requirements,
+  .field-requirements {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -337,7 +332,9 @@ button:focus-visible {
     width: 100%;
   }
 
-  #field-editor .password-requirements {
+  #field-editor .parameterized-rules,
+  #field-editor .password-requirements,
+  .field-requirements {
     grid-template-columns: 1fr;
   }
 }

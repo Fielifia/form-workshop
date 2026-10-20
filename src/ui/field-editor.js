@@ -38,7 +38,7 @@ const FIELD_RULES = {
     parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
   },
   tel: {
-    validation: [],
+    validation: ['OnlyDigitsRule'],
     parameterized: PARAMETERIZED_RULES.map(rule => rule.value)
   },
   url: {
@@ -307,71 +307,78 @@ export function createFieldEditor(
    * @returns {HTMLFieldSetElement}
    */
   function createValidationRules(field) {
+
+    const rules = getFieldRules(field.type)
+
+    if (rules.validation.length === 0) {
+      return null
+    }
+
     const fieldset = document.createElement('fieldset')
     const legend = document.createElement('legend')
 
     legend.textContent = 'Validation rules'
     fieldset.append(legend)
 
-    const rules = getFieldRules(field.type)
     const isPassword = field.type === 'password'
 
-    fieldset.disabled = rules.validation.length === 0
+    AVAILABLE_VALIDATION_RULES
+      .filter(rule => rules.validation.includes(rule.value))
+      .forEach(rule => {
+        const label = document.createElement('label')
+        const checkbox = document.createElement('input')
 
-    AVAILABLE_VALIDATION_RULES.forEach(rule => {
-      const label = document.createElement('label')
-      const checkbox = document.createElement('input')
+        checkbox.type = 'checkbox'
+        checkbox.value = rule.value
 
-      checkbox.type = 'checkbox'
-      checkbox.value = rule.value
+        const isPasswordRequiredRule =
+          isPassword && PASSWORD_REQUIRED_RULES.includes(rule.value)
 
-      const isPasswordRequiredRule =
-        isPassword && PASSWORD_REQUIRED_RULES.includes(rule.value)
+        checkbox.checked = isPasswordRequiredRule ||
+          field.validationRules.some(
+            selectedRule => getRuleName(selectedRule) === rule.value)
 
-      checkbox.checked = isPasswordRequiredRule ||
-        field.validationRules.some(
-          selectedRule => getRuleName(selectedRule) === rule.value)
-
-      checkbox.disabled = isPasswordRequiredRule ||
-        !rules.validation.includes(rule.value) ||
-        field.validationRules.some(selectedRule => {
-          const selectedRuleName = getRuleName(selectedRule)
-
-          return DISABLED_RULES[selectedRuleName]?.includes(rule.value)
-        }
-        )
-
-      checkbox.setAttribute(
-        'aria-label',
-        `${rule.label} for ${field.label}`
-      )
-
-      label.append(
-        checkbox,
-        document.createTextNode(` ${rule.label}`)
-      )
-
-      checkbox.addEventListener('change', () => {
-        let validationRules = field.validationRules.filter(
-          selectedRule => getRuleName(selectedRule) !== rule.value
-        )
-
-        if (checkbox.checked) {
-          validationRules = validationRules.filter(selectedRule => {
+        checkbox.disabled = isPasswordRequiredRule ||
+          !rules.validation.includes(rule.value) ||
+          field.validationRules.some(selectedRule => {
             const selectedRuleName = getRuleName(selectedRule)
 
-            return !RULE_CONFLICTS[rule.value]?.includes(selectedRuleName)
+            return DISABLED_RULES[selectedRuleName]?.includes(rule.value)
           }
           )
 
-          validationRules.push(rule.value)
-        }
+        checkbox.setAttribute(
+          'aria-label',
+          `${rule.label} for ${field.label}`
+        )
 
-        updateField(field.id, { validationRules })
+        label.append(
+          checkbox,
+          document.createTextNode(` ${rule.label}`)
+        )
+
+        checkbox.addEventListener('change', () => {
+          let validationRules = field.validationRules.filter(
+            selectedRule => getRuleName(selectedRule) !== rule.value
+          )
+
+          if (checkbox.checked) {
+            validationRules = validationRules.filter(selectedRule => {
+              const selectedRuleName = getRuleName(selectedRule)
+
+              return !RULE_CONFLICTS[rule.value]?.includes(selectedRuleName)
+            }
+            )
+
+            validationRules.push(rule.value)
+          }
+
+          updateField(field.id, { validationRules })
+
+        })
+
+        fieldset.append(label)
       })
-
-      fieldset.append(label)
-    })
 
     return fieldset
   }
@@ -563,6 +570,12 @@ export function createFieldEditor(
    * @returns {HTMLFieldSetElement} The fieldset containing the controls.
    */
   function createParameterizedValidationRules(field) {
+    const rules = getFieldRules(field.type)
+
+    if (rules.parameterized.length === 0) {
+      return null
+    }
+
     const fieldset = document.createElement('fieldset')
     const legend = document.createElement('legend')
 
@@ -625,7 +638,7 @@ export function createFieldEditor(
 
     requirements.forEach(requirement => {
       const paragraph = document.createElement('p')
-      paragraph.textContent = `🔒 ${requirement}`
+      paragraph.textContent = requirement
       fieldset.append(paragraph)
     })
 
@@ -680,14 +693,24 @@ export function createFieldEditor(
           createTypeSelect(field),
           createRequiredCheckbox(field),
           createRemoveButton(field),
-          createParameterizedValidationRules(field),
         )
 
         if (field.type === 'password') {
           item.append(createPasswordRequirements())
         }
 
-        item.append(createValidationRules(field))
+        const parameterizedValidationRules = createParameterizedValidationRules(field)
+
+        if (parameterizedValidationRules) {
+          item.append(parameterizedValidationRules)
+        }
+
+        const validationRules = createValidationRules(field)
+
+        if (validationRules) {
+          item.append(validationRules)
+        }
+
         list.append(item)
       })
 

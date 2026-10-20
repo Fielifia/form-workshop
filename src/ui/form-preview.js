@@ -58,16 +58,20 @@ function createRequirementList(field, fields) {
     return null
   }
 
-  const list = document.createElement('ul')
-  list.className = 'field-requirements'
+  const fieldset = document.createElement('fieldset')
+  fieldset.className = 'field-requirements'
+
+  const legend = document.createElement('legend')
+  legend.textContent = 'Requirements'
+  fieldset.append(legend)
 
   requirements.forEach(requirement => {
-    const item = document.createElement('li')
-    item.textContent = requirement
-    list.append(item)
+    const paragraph = document.createElement('p')
+    paragraph.textContent = requirement
+    fieldset.append(paragraph)
   })
 
-  return list
+  return fieldset
 }
 
 /**
