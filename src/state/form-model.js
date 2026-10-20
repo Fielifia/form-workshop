@@ -24,6 +24,36 @@ const ALLOWED_VALIDATION_RULES = [
 ]
 
 /**
+ * Gets the matching rule from a field's validation rules.
+ * 
+ * @param {Object} field - The field to inspect.
+ * @returns {Object|undefined} The matching rule, or undefined if none exists.
+ */
+function getMatchingRule(field) {
+  return field.validationRules.find(
+    rule => typeof rule === 'object' &&
+      rule.name === 'MatchingFieldsRule'
+  )
+}
+
+/**
+ * Gets the field that the specified field matches.
+ *
+ * @param {Array<Object>} fields - All fields in the form.
+ * @param {Object} field - The field whose matching target should be found.
+ * @return {Object|null} The matching field, or null if it does not exist. 
+ */
+function getMatchingField(fields, field) {
+  const matchingRule = getMatchingRule(field)
+
+  if (!matchingRule) return null
+
+  return fields.find(
+    existing => existing.id === matchingRule.value
+  ) ?? null
+}
+
+/**
  * Creates a configurable form model independent of the user interface.
  * 
  * The model manages field configuration and provides operations for
@@ -186,9 +216,9 @@ function validateField(field) {
   }
 
   const ruleNames = field.validationRules.map(rule =>
-  typeof rule === 'string' ? rule : rule?.name
+    typeof rule === 'string' ? rule : rule?.name
   )
-  
+
   for (const ruleName of ruleNames) {
     if (!ALLOWED_VALIDATION_RULES.includes(ruleName)) {
       throw new TypeError(
@@ -221,7 +251,7 @@ function validateField(field) {
 
     if (rule.name === 'MatchingFieldsRule') {
       return typeof rule.value === 'string' &&
-      rule.value.trim() !== ''
+        rule.value.trim() !== ''
     }
 
     return false

@@ -204,3 +204,133 @@ test('preserves the field when an update is invalid', () => {
 
   assert.deepEqual(form.getFields(), [makeField()])
 })
+
+test('matching field inherits type, required and validation rules', () => {
+  const form = createFormModel()
+
+  form.addField(makeField({
+    id: 'password',
+    label: 'Password',
+    type: 'password',
+    required: true,
+    validationRules: [
+      { name: 'MinLengthRule', value: 12 },
+      'UppercaseRule',
+    ]
+  }))
+
+  form.addField(makeField({
+    id: 'confirm-password',
+    label: 'Confirm password',
+    type: 'text',
+    required: false,
+    validationRules: [
+      { name: 'MatchingFieldsRule', value: 'password' }
+    ]
+  }))
+
+  const confirmation = form.getFields().find(
+    field => field.id === 'confirm-password'
+  )
+
+  assert.equal(confirmation.type, 'password')
+  assert.equal(confirmation.required, true)
+  assert.deepEqual(confirmation.validationRules, [
+    { name: 'MinLengthRule', value: 12 },
+    'UppercaseRule'
+  ])
+})
+
+test('matching field follows change to the original field', () => {
+  const form = createFormModel()
+
+  form.addField(makeField({
+    id: 'original',
+    type: 'text',
+    required: false,
+    validationRules: ['OnlyLettersRule']
+  }))
+
+  form.addField(makeField({
+    id: 'confirmation',
+    validationRules: [
+      { name: 'MatchingFieldsRule', value: 'original' }
+    ]
+  }))
+
+  form.updateField('original', {
+    type: 'email',
+    required: true,
+    validationRules: ['EmailRule']
+  })
+
+  const confirmation = form.getFields().find(
+    field => field.id === 'confirmation'
+  )
+
+  assert.equal(confirmation.type, 'email')
+  assert.equal(confirmation.required, true)
+  assert.deepEqual(confirmation.validationRules, ['EmailRule'])
+})
+
+test('removing the original field preserves inherited settings', () => {
+  const form = createFormModel()
+
+  form.addField(makeField({
+    id: 'original',
+    type: 'password',
+    required: true,
+    validationRules: [
+      { name: 'MinLengthRule', value: 12 },
+      'UppercaseRule'
+    ]
+  }))
+
+  form.addField(makeField({
+    id: 'confirmation',
+    validationRules: [
+      { name: 'MatchingFieldsRule', value: 'original' }
+    ]
+  }))
+
+  form.removeField('original')
+
+  const confirmation = form.getFields().find(
+    field => field.id === 'confirmation'
+  )
+
+  assert.equal(confirmation.type, 'password')
+  assert.equal(confirmation.required, true)
+  assert.deepEqual(confirmation.validationRules, [
+    { name: 'MinLengthRule', value: 12 },
+    'UppercaseRule'
+  ])
+})
+
+
+test('removing the original field clears the matching rule', () => {
+  const form = createFormModel()
+
+  form.addField(makeField({
+    id: 'original',
+  }))
+
+  form.addField(makeField({
+    id: 'confirmation',
+    validationRules: [
+      { name: 'MatchingFieldsRule', value: 'original' }
+    ]
+  }))
+
+  form.removeField('original')
+
+  const confirmation = form.getFields().find(
+    field => field.id === 'confirmation'
+  )
+
+  assert.equal(confirmation.validationRules.some(
+    rule => typeof rule === 'object' &&
+      rule.name === 'MatchingFieldsRule'
+  ), false
+  )
+})
