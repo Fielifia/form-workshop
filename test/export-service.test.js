@@ -220,19 +220,106 @@ test('validates exported form values correctly', () => {
   dom.window.close()
 })
 
+test('validates exported form reject empty required field', () => {
+  const html = generateHTML([
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: true,
+      validationRules: []
+    }
+  ])
+
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously'
+  })
+
+  const { document, Event } = dom.window
+  const form = document.getElementById('exported-form')
+  const input = document.getElementById('name')
+  const feedback = document.getElementById('validation-feedback')
+
+  input.value = ''
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-error')
+  assert.equal(feedback.textContent, 'Please correct the errors above.')
+
+  input.value = 'Name'
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-success')
+  assert.equal(feedback.textContent, 'All fields are valid.')
+
+  dom.window.close()
+})
+
+test('validates exported form with several validation rules', () => {
+  const html = generateHTML([
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: true,
+      validationRules: [
+        { name: 'MinLengthRule', value: 3 },
+        'OnlyLettersRule',
+        'UppercaseRule',
+        'LowercaseRule',
+      ]
+    }
+  ])
+
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously'
+  })
+
+  const { document, Event } = dom.window
+  const form = document.getElementById('exported-form')
+  const input = document.getElementById('name')
+  const feedback = document.getElementById('validation-feedback')
+
+  input.value = 'wr0ng'
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-error')
+  assert.equal(feedback.textContent, 'Please correct the errors above.')
+
+  input.value = 'Name'
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-success')
+  assert.equal(feedback.textContent, 'All fields are valid.')
+
+  dom.window.close()
+})
+
 test('validates matching fields in exported form', () => {
   const html = generateHTML([
     {
-      id: 'password',
-      label: 'Password',
-      type: 'password',
+      id: 'username',
+      label: 'Username',
+      type: 'text',
       required: true,
       validationRules: []
     },
     {
       id: 'confirmation',
-      label: 'Confirm password',
-      type: 'password',
+      label: 'Confirm username',
+      type: 'text',
       required: true,
       validationRules: [
         { name: 'MatchingFieldsRule', value: 'password' }
@@ -246,11 +333,11 @@ test('validates matching fields in exported form', () => {
 
   const { document, Event } = dom.window
   const form = document.getElementById('exported-form')
-  const input = document.getElementById('password')
+  const input = document.getElementById('username')
   const confirmation = document.getElementById('confirmation')
   const feedback = document.getElementById('validation-feedback')
 
-  input.value = 'myPassword1!'
+  input.value = 'Player1!'
   confirmation.value = 'nomatch'
   form.dispatchEvent(new Event('submit', {
     bubbles: true,
@@ -259,9 +346,13 @@ test('validates matching fields in exported form', () => {
 
   assert.equal(feedback.className, 'validation-error')
   assert.equal(feedback.textContent, 'Please correct the errors above.')
+  assert.equal(
+    document.getElementById('confirmation-error').textContent,
+    'The fields do not match.'
+  )
 
-  input.value = 'myPassword1!'
-  confirmation.value = 'myPassword1!'
+  input.value = 'Player1!'
+  confirmation.value = 'Player1!'
   form.dispatchEvent(new Event('submit', {
     bubbles: true,
     cancelable: true
