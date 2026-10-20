@@ -1,3 +1,5 @@
+import { getFieldRequirements } from './requirement-service.js'
+
 /**
  * Escapes a value before inserting it into HTML markup.
  * 
@@ -28,6 +30,8 @@ const fieldConfigurations = JSON.parse(
 )
 
 function validateRule(rule, value, formData) {
+  const ruleName = typeof rule === 'string' ? rule : rule.name
+
   switch (rule.name) {
   case 'EmailRule':
     return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)
@@ -69,7 +73,7 @@ function validateRule(rule, value, formData) {
 
 function validatePassword(password) {
   const specialChars = '!@#£$%/\\\\{([)]=}<?+~^*-_.:|>'
-  
+
   const hasUppercase = [...password].some(
     character => character === character.toUpperCase() &&
       character !== character.toLowerCase()
@@ -138,8 +142,9 @@ form.addEventListener('submit', (event) => {
       }
 
       if (!message && configuration && value !== '') {
-        const failedRule = configuration.validationRules.find(
-          rule => !validateRule(rule, String(value), formData)
+        const failedRule = configuration.validationRules
+        .map(rule => typeof rule === 'string' ? { name: rule } : rule)
+        .find(rule => !validateRule(rule, String (value), formData)
         )
 
         if (failedRule) {
@@ -226,11 +231,23 @@ export function generateHTML(fields) {
       : field.type === 'checkbox'
         ? `<input type="checkbox" id="${id}" name="${id}"${required}>`
         : `<input type="${type}" id="${id}" name="${id}"${required}>`
+    
+    const requirements = getFieldRequirements(field, fields)
+
+    const requirementsHTML = requirements.length > 0
+      ? `<fieldset class="field-requirements">
+              <legend>Requirements</legend>
+              ${requirements.map(requirement =>
+        `<p>${escapeHTML(requirement)}</p>`
+      ).join('')}
+              </fieldset>`
+          : ''
 
     return `
         <div class="preview-field">
         <label for="${id}">${label}${requiredIndicator}</label>
         ${input}
+        ${requirementsHTML}
         <p class="field-error" id="${id}-error" hidden></p>
         </div>
         `
@@ -317,6 +334,32 @@ export function generateHTML(fields) {
       margin-top: 1.5rem;
       color: #424b57;
       font-size: .9rem;
+    }
+
+    .field-requirements {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .4rem .75rem;
+      margin: 0;
+      padding: .6rem .8rem .75rem;
+    }
+
+    .field-requirements legend {
+      font-size: .9rem;
+    }
+
+    .field-requirements p {
+      display: flex;
+      min-width: 0;
+      margin: 0;
+      font-size: .85rem;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .field-requirements p::before {
+      flex: 0 0 .6rem;
+      content: "• ";
     }
   </style>
 </head>

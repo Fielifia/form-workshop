@@ -24,6 +24,45 @@ const ALLOWED_VALIDATION_RULES = [
 ]
 
 /**
+ * Gets the matching rule from a field's validation rules.
+ * 
+ * @param {Object} field - The field to inspect.
+ * @returns {Object|undefined} The matching rule, or undefined if none exists.
+ */
+function getMatchingRule(field) {
+  return field.validationRules.find(
+    rule => typeof rule === 'object' &&
+      rule.name === 'MatchingFieldsRule'
+  )
+}
+
+/**
+ * Copies validation rules without the matching relationship.
+ * 
+ * @param {Array<string|object>} rules - Rules to copy.
+ * @returns {Array<string|object>} Independent copies of the rules.
+ */
+function copyRulesWithoutMatching(rules) {
+  return copyValidationRules(
+    rules.filter(rule =>
+      !(typeof rule === 'object' &&
+        rule.name === 'MatchingFieldsRule')
+    )
+  )
+}
+
+/**
+ * Finds a field by ID.
+ * 
+ * @param {Array<object>} fields - All configured fields.
+ * @param {string} id - The field ID to find.
+ * @returns {objet|null} The field, or null if it does not exist.
+ */
+function findField(fields, id) {
+  return fields.find(field => field.id === id) ?? null
+}
+
+/**
  * Creates a configurable form model independent of the user interface.
  * 
  * The model manages field configuration and provides operations for
@@ -34,111 +73,199 @@ const ALLOWED_VALIDATION_RULES = [
 export function createFormModel() {
   const fields = []
 
-  return {
+  /**
+   * Return copies of all configured fields.
+   * 
+   * Each field and its validation rules array are copied so that
+   * changes to the returned data do not affect the model's state.
+   * 
+   * Matching relationships are exposed through matchingFieldId.
+   * 
+   * @returns {Array<object>} Copies of the configured fields.
+   */
+  function getFields() {
+    return fields.map(field => ({
+      ...field,
+      validationRules: copyValidationRules(field.validationRules)
+    }))
+  }
 
-    /**
-     * Return copies of all configured fields in the form.
-     * 
-     * Each field and its validation rules array are copied so that
-     * changes to the returned data do not affect the model's state.
-     * 
-     * @returns {Array<object>} Copies of the configured fields.
-     */
-    getFields() {
-      return fields.map(field => ({
-        ...field,
-        validationRules: copyValidationRules(field.validationRules)
-      }))
-    },
+  /**
+   *Synchronizes fields that match the specified original field.
+   *
+   * @param {object} source - The original field.
+   * @returns {void}
+   */
+  function syncMatchingFields(source) {
+    fields.forEach(field => {
+      if (field.matchingFieldId !== source.id) return
 
-    /**
-     * Adds a field to the form model.
-     * 
-     * The field configuration is validated before it is stored.
-     * Field IDs must be unique, and the stored validation rules
-     * are copied from the supplied configuration.
-     * 
-     * @param {object} field - The field configuration to add.
-     * @throws {TypeError} If the field configuration is invalid.
-     * @throws {Error} If a field with the same ID already exists.
-     */
-    addField(field) {
-      validateField(field)
+      field.type = source.type
+      field.required = source.required
+      field.validationRules = copyRulesWithoutMatching(
+        source.validationRules
+      )
+    })
+  }
 
-      if (fields.some(existing => existing.id === field.id)) {
-        throw new Error(`A field with ID "${field.id}" already exists.`)
-      }
-      fields.push({
-        id: field.id,
-        label: field.label.trim(),
-        type: field.type,
-        required: field.required,
-        validationRules: copyValidationRules(field.validationRules)
-      })
-    },
+  /**
+   * Adds a field to the form model.
+   * 
+   * The field configuration is validated before it is stored.
+   * Field IDs must be unique, and the stored validation rules
+   * are copied from the supplied configuration.
+   * 
+   * Matching fields inherit the type, required state and validation rules of the field they match.
+   * 
+   * @param {object} field - The field configuration to add.
+   * @throws {TypeError} If the field configuration is invalid.
+   * @throws {Error} If a field with the same ID already exists.
+   */
+  function addField(field) {
+    validateField(field)
 
-    /**
-     * Removes a field from the form model by its ID.
-     * 
-     * @param {string} id - The ID of the field to remove.
-     * @returns {boolean} True if the field was removed, otherwise false.
-     */
-    removeField(id) {
-      const index = fields.findIndex(field => field.id === id)
-
-      if (index === -1) {
-        return false
-      }
-      fields.splice(index, 1)
-      return true
-    },
-
-
-    /**
-     * Updates an existing field without changing its ID.
-     * 
-     * The resulting field configuration is validated before it replaces
-     * the existing field. If validation fails, the existing field remains
-     * unchanged.
-     * 
-     * @param {string} id - The ID of the field to update.
-     * @param {object} fieldChanges - The properties to update.
-     * @returns {boolean} True if the field was updated, otherwise false.
-     * @throws {TypeError} If the resulting field configuration is invalid.
-     */
-    updateField(id, fieldChanges) {
-      const index = fields.findIndex(field => field.id === id)
-
-      if (index === -1) {
-        return false
-      }
-
-      const updatedField = {
-        ...fields[index],
-        ...fieldChanges,
-        id,
-        validationRules: fieldChanges.validationRules === undefined
-          ? copyValidationRules(fields[index].validationRules)
-          : fieldChanges.validationRules
-      }
-
-      validateField(updatedField)
-
-      fields[index] = {
-        ...updatedField,
-        label: updatedField.label.trim(),
-        validationRules: copyValidationRules(updatedField.validationRules)
-      }
-
-      return true
+    if (findField(fields, field.id)) {
+      throw new Error(`A field with ID "${field.id}" already exists.`)
     }
+
+    const matchingRule = getMatchingRule(field)
+    const source = matchingRule
+      ? findField(fields, matchingRule.value)
+      : null
+
+    if (matchingRule && !source) {
+      throw new TypeError('The matching fields does not exist.')
+    }
+
+    if (source?.matchingFieldId) {
+      throw new TypeError(
+        `A matching field cannot match another matching field.`
+      )
+    }
+
+    const newField = {
+      id: field.id,
+      label: field.label.trim(),
+      type: source ? source.type : field.type,
+      required: source ? source.required : field.required,
+      validationRules: source
+        ? copyRulesWithoutMatching(source.validationRules)
+        : copyRulesWithoutMatching(field.validationRules)
+    }
+
+    if (source) {
+      newField.matchingFieldId = source.id
+    }
+
+    fields.push(newField)
+  }
+
+  /**
+   * Removes a field and releases fields that match it.
+   * 
+   * Released fields retain their latest inherited settings.
+   * 
+   * @param {string} id - The ID of the field to remove.
+   * @returns {boolean} True if removed, otherwise false.
+   */
+  function removeField(id) {
+    const index = fields.findIndex(field => field.id === id)
+
+    if (index === -1) return false
+
+    fields.forEach(field => {
+      if (field.matchingFieldId === id) {
+        delete field.matchingFieldId
+      }
+    })
+
+    fields.splice(index, 1)
+    return true
+  }
+
+  /**
+   * Updates an field and synchronizes its matching fields.
+   * 
+   * @param {string} id - The ID of the field to update.
+   * @param {object} fieldChanges - The properties to update.
+   * @returns {boolean} True if updated, otherwise false.
+   * @throws {TypeError} If the resulting field configuration is invalid.
+   */
+  function updateField(id, changes) {
+    const index = fields.findIndex(field => field.id === id)
+
+    if (index === -1) return false
+
+    const current = fields[index]
+    const suppliedRules = changes.validationRules === undefined
+      ? copyValidationRules(current.validationRules)
+      : changes.validationRules
+
+    const matchingRule = getMatchingRule({
+      validationRules: suppliedRules
+    })
+
+    const source = matchingRule
+      ? findField(fields, matchingRule.value)
+      : null
+
+    if (matchingRule && !source) {
+      throw new TypeError('The matching fields does not exist.')
+    }
+
+    if (source && source.id === id) {
+      throw new TypeError('A field cannot match itself.');
+
+    }
+
+    if (source?.matchingFieldId) {
+      throw new TypeError(
+        `A matching field cannot match another matching field.`
+      )
+    }
+
+    const updatedField = {
+      ...current,
+      ...changes,
+      id,
+      validationRules: source
+        ? copyRulesWithoutMatching(source.validationRules)
+        : copyRulesWithoutMatching(suppliedRules)
+    }
+
+    if (source) {
+      updatedField.type = source.type
+      updatedField.required = source.required
+      updatedField.matchingFieldId = source.id
+    } else {
+      delete updateField.matchingFieldId
+    }
+
+    validateField(updatedField)
+
+    fields[index] = {
+      ...updatedField,
+      label: updatedField.label.trim(),
+      validationRules: copyValidationRules(
+        updatedField.validationRules
+      )
+    }
+
+    syncMatchingFields(fields[index])
+
+    return true
+  }
+
+  return {
+    getFields,
+    addField,
+    removeField,
+    updateField
   }
 }
 
 /**
- * Creates a copy of validation rules.
- * 
- * Strings are immutable, while rule objects are copied to prevent external changes from affecting the model's internal state.
+ * Creates copies of validation rules.
  * 
  * @param {Array<string|object>} validationRules - Rules to copy.
  * @returns {Array<string|object>} Copies of the validation rules.
@@ -151,9 +278,6 @@ function copyValidationRules(validationRules) {
 
 /**
  * Validates a field configuration.
- * 
- * Checks that the field has a valid ID, label, type, required flag
- * and an array of non-empty validation rule strings.
  * 
  * @param {object} field - The field to validate.
  * @throws {TypeError} If the field is invalid or contains invalid properties.
@@ -173,8 +297,7 @@ function validateField(field) {
   }
 
   if (!ALLOWED_FIELD_TYPES.includes(field.type)) {
-    throw new TypeError(`Unsupported field type: "${field.type}". A field must have a valid type. Allowed types: ${ALLOWED_FIELD_TYPES.join(', ')}.`
-    )
+    throw new TypeError(`Unsupported field type: "${field.type}".`)
   }
 
   if (typeof field.required !== 'boolean') {
@@ -186,9 +309,9 @@ function validateField(field) {
   }
 
   const ruleNames = field.validationRules.map(rule =>
-  typeof rule === 'string' ? rule : rule?.name
+    typeof rule === 'string' ? rule : rule?.name
   )
-  
+
   for (const ruleName of ruleNames) {
     if (!ALLOWED_VALIDATION_RULES.includes(ruleName)) {
       throw new TypeError(
@@ -221,7 +344,7 @@ function validateField(field) {
 
     if (rule.name === 'MatchingFieldsRule') {
       return typeof rule.value === 'string' &&
-      rule.value.trim() !== ''
+        rule.value.trim() !== ''
     }
 
     return false
