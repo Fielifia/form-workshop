@@ -19,19 +19,7 @@ exportButton.addEventListener('click', () => {
   try {
     const fields = formModel.getFields()
     const html = generateHTML(fields)
-
-    console.log(
-      html.slice(
-        html.indexOf("case 'OnlyLettersRule':"),
-        html.indexOf("case 'OnlyDigitsRule':")
-      )
-    )
-
-    console.log(
-      'Generated rules:',
-      html.match(/"validationRules":\[[^\]]*\]/g)
-    )
-
+    
     const blob = new Blob([html], {
       type: 'text/html;charset=utf-8'
     })
