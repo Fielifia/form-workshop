@@ -534,14 +534,24 @@ export function createFieldEditor(
           getRuleName(configuredRule) !== 'MatchingFieldsRule'
       )
 
+      const changes = { validationRules }
+
       if (select.value !== '') {
         validationRules.push({
           name: 'MatchingFieldsRule',
           value: select.value
         })
+
+        const originalField = formModel.getFields().find(
+          otherField => otherField.id === select.value
+        )
+
+        if (field.label === 'New field' && originalField) {
+          changes.label = `Confirm ${originalField.label}`
+        }
       }
 
-      updateField(field.id, { validationRules })
+      updateField(field.id, changes)
     })
 
     label.append(select)
