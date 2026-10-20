@@ -87,6 +87,7 @@ export function createFormModel() {
      * The field configuration is validated before it is stored.
      * Field IDs must be unique, and the stored validation rules
      * are copied from the supplied configuration.
+     * Matching fields inherit the type, required state and validation rules of the field they match.
      * 
      * @param {object} field - The field configuration to add.
      * @throws {TypeError} If the field configuration is invalid.
@@ -98,12 +99,32 @@ export function createFormModel() {
       if (fields.some(existing => existing.id === field.id)) {
         throw new Error(`A field with ID "${field.id}" already exists.`)
       }
+
+      const matchingRule = getMatchingRule(field)
+      const matchingField = getMatchingField(fields, field)
+
+      const newField = matchingField
+        ? {
+          ...field,
+          type: matchingField.type,
+          required: matchingField.required,
+          validationRules: copyValidationRules(
+            matchingField.validationRules
+          ),
+          matchingFieldId: matchingRule.value
+        }
+        : field
+
       fields.push({
-        id: field.id,
-        label: field.label.trim(),
-        type: field.type,
-        required: field.required,
-        validationRules: copyValidationRules(field.validationRules)
+        id: newField.id,
+        label: newField.label.trim(),
+        type: newField.type,
+        required: newField.required,
+        validationRules: copyValidationRules(newField.validationRules),
+        ...(newField.matchingFieldId
+          ? { matchingFieldId: newField.matchingFieldId }
+          : {}
+        )
       })
     },
 
@@ -158,6 +179,16 @@ export function createFormModel() {
         ...updatedField,
         label: updatedField.label.trim(),
         validationRules: copyValidationRules(updatedField.validationRules)
+      }
+
+      for (const field of fields) {
+        if (field.matchingFieldId !== id) continue
+
+        field.type = fields[index].type
+        field.required = fields[index].required
+        field.validationRules = copyValidationRules(
+          fields[index].validationRules
+        )
       }
 
       return true
