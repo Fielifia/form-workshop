@@ -7,6 +7,26 @@
 export function getFieldRequirements(field, fields = []) {
   const requirements = []
 
+  const matchingRule = field.validationRules.find(rule =>
+    (typeof rule === 'string' ? rule : rule.name) === 'MatchingFieldsRule'
+  )
+
+  if (matchingRule) {
+    const matchingFieldId = typeof matchingRule === 'string'
+      ? undefined
+      : matchingRule.value
+
+    const matchingField = fields.find(
+      item => item.id === matchingFieldId
+    )
+
+    return [
+      matchingField
+        ? `Must match the field ${matchingField.label}.`
+        : 'Must match the specified field.'
+    ]
+  }
+
   if (field.required) {
     requirements.push('This field is required.')
   }
@@ -53,18 +73,9 @@ export function getFieldRequirements(field, fields = []) {
       return
     }
 
-    if (rule.name === 'MatchingFieldsRule') {
-      const matchingField = fields.find(
-        item => item.id === rule.value
-      )
-      requirements.push(
-        matchingField
-          ? `Must match the field "${matchingField.label}".`
-          : `Must match the specified field.`
-      )
-    } else if (messages[rule.name]) {
+    if (messages[rule.name]) [
       requirements.push(messages[rule.name])
-    }
+    ]
   })
 
   if (ruleNames.has('UppercaseRule') && ruleNames.has('LowercaseRule')) {

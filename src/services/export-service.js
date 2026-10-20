@@ -1,3 +1,5 @@
+import { getFieldRequirements } from './requirement-service.js'
+
 /**
  * Escapes a value before inserting it into HTML markup.
  * 
@@ -226,11 +228,23 @@ export function generateHTML(fields) {
       : field.type === 'checkbox'
         ? `<input type="checkbox" id="${id}" name="${id}"${required}>`
         : `<input type="${type}" id="${id}" name="${id}"${required}>`
+    
+    const requirements = getFieldRequirements(field, fields)
+
+    const requirementsHTML = requirements.length > 0
+      ? `<fieldset class="field-requirements">
+              <legend>Requirements</legend>
+              ${requirements.map(requirement =>
+        `<p>${escapeHTML(requirement)}</p>`
+      ).join('')}
+              </fieldset>`
+          : ''
 
     return `
         <div class="preview-field">
         <label for="${id}">${label}${requiredIndicator}</label>
         ${input}
+        ${requirementsHTML}
         <p class="field-error" id="${id}-error" hidden></p>
         </div>
         `
@@ -320,15 +334,29 @@ export function generateHTML(fields) {
     }
 
     .field-requirements {
-      margin: .25rem 0 .5rem;
-      padding-left: 1.25rem;
-      line-height: 1.2;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .4rem .75rem;
+      margin: 0;
+      padding: .6rem .8rem .75rem;
+    }
+
+    .field-requirements legend {
       font-size: .9rem;
     }
 
-    .field-requirements li {
+    .field-requirements p {
+      display: flex;
+      min-width: 0;
       margin: 0;
-      padding: 0;
+      font-size: .85rem;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .field-requirements p::before {
+      flex: 0 0 .6rem;
+      content: "• ";
     }
   </style>
 </head>
