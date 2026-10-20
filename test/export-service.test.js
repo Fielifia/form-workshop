@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { generateHTML } from '../src/services/export-service.js'
+import { JSDOM } from 'jsdom'
 
 console.log(`\n===== EXPORT SERVICE TESTS =====`)
 
@@ -123,33 +124,6 @@ test('generates syntactically valid JavaScript', () => {
   })
 })
 
-test('includes matching field validation in exported JavaScript', () => {
-  const html = generateHTML([
-    {
-      id: 'password',
-      label: 'Password',
-      type: 'password',
-      required: true,
-      validationRules: []
-    },
-    {
-      id: 'confirm-password',
-      label: 'Confirm password',
-      type: 'password',
-      required: true,
-      validationRules: [
-        {
-          name: 'MatchingFieldsRule',
-          value: 'password'
-        }
-      ] 
-    }
-  ])
-
-  assert.match(html, /MatchingFieldsRule/)
-  assert.match(html, /formData\[rule\.value\]/)
-})
-
 test('exports matching fields validation logic', () => {
   const html = generateHTML([
     {
@@ -182,4 +156,66 @@ test('preserves backslash as an allowed password special character', () => {
   const html = generateHTML([])
 
   assert.match(html, /const specialChars = .*\\/)
+})
+
+test('supports string validation rules in exported HTML', () => {
+  const fields = [
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: false,
+      validationRules: [
+        'OnlyLettersRule',
+        'UppercaseRule',
+        'LowercaseRule'
+      ]
+    }
+  ]
+
+  const html = generateHTML(fields)
+
+  assert.ok(html.includes('"validationRules":["OnlyLettersRule","UppercaseRule","LowercaseRule"]'))
+  assert.match(html, /typeof rule === 'string'/)
+})
+
+test('validates exported form values correctly', () => {
+  const html = generateHTML([
+    {
+      id: 'name',
+      label: 'Name',
+      type: 'text',
+      required: false,
+      validationRules: ['OnlyLettersRule']
+    }
+  ])
+
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously'
+  })
+
+  const { document, Event } = dom.window
+  const form = document.getElementById('exported-form')
+  const input = document.getElementById('name')
+  const feedback = document.getElementById('validation-feedback')
+
+  input.value = '42'
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-error')
+  assert.equal(feedback.textContent, 'Please correct the errors above.')
+
+  input.value = 'Name'
+  form.dispatchEvent(new Event('submit', {
+    bubbles: true,
+    cancelable: true
+  }))
+
+  assert.equal(feedback.className, 'validation-success')
+  assert.equal(feedback.textContent, 'All fields are valid.')
+
+  dom.window.close()
 })
