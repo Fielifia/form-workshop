@@ -32,7 +32,7 @@ const fieldConfigurations = JSON.parse(
 function validateRule(rule, value, formData) {
   const ruleName = typeof rule === 'string' ? rule : rule.name
 
-  switch (rule.name) {
+  switch (ruleName) {
   case 'EmailRule':
     return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)
 
@@ -63,7 +63,7 @@ function validateRule(rule, value, formData) {
       /(https?:\\/\\/[^\\s]+|www\\.[^\\s]+|[a-zA-Z0-9-]+\\.[a-zA-Z]{2,})/i.test(value)
     )
 
-  case 'MatchingFieldsRule':
+  case 'MatchingFieldsRule':      
     return value === formData[rule.value]
 
   default:
@@ -196,11 +196,22 @@ form.addEventListener('submit', (event) => {
  * @returns {string} JSON representation of the validation rules.
  */
 function serializeValidationRules(fields) {
-  const rules = fields.map(field => ({
-    id: field.id,
-    required: field.required,
-    validationRules: field.validationRules
-  }))
+  const rules = fields.map(field => {
+    const validationRules = [...field.validationRules]
+
+    if (field.matchingFieldId) {
+      validationRules.push({
+        name: 'MatchingFieldsRule',
+        value: field.matchingFieldId
+      })
+    }
+
+    return {
+      id: field.id,
+      required: field.required,
+      validationRules
+    }
+  })
 
   return JSON.stringify(rules).replaceAll('<', '\\u003c')
 }
@@ -231,7 +242,7 @@ export function generateHTML(fields) {
       : field.type === 'checkbox'
         ? `<input type="checkbox" id="${id}" name="${id}"${required}>`
         : `<input type="${type}" id="${id}" name="${id}"${required}>`
-    
+
     const requirements = getFieldRequirements(field, fields)
 
     const requirementsHTML = requirements.length > 0
@@ -241,7 +252,7 @@ export function generateHTML(fields) {
         `<p>${escapeHTML(requirement)}</p>`
       ).join('')}
               </fieldset>`
-          : ''
+      : ''
 
     return `
         <div class="preview-field">

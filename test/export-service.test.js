@@ -322,7 +322,7 @@ test('validates matching fields in exported form', () => {
       type: 'text',
       required: true,
       validationRules: [
-        { name: 'MatchingFieldsRule', value: 'password' }
+        { name: 'MatchingFieldsRule', value: 'username' }
       ]
     }
   ])

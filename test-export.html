@@ -155,7 +155,7 @@ const fieldConfigurations = JSON.parse(
 function validateRule(rule, value, formData) {
   const ruleName = typeof rule === 'string' ? rule : rule.name
 
-  switch (rule.name) {
+  switch (ruleName) {
   case 'EmailRule':
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
@@ -186,7 +186,7 @@ function validateRule(rule, value, formData) {
       /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/i.test(value)
     )
 
-  case 'MatchingFieldsRule':
+  case 'MatchingFieldsRule':      
     return value === formData[rule.value]
 
   default:
