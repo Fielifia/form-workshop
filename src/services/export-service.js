@@ -30,6 +30,8 @@ const fieldConfigurations = JSON.parse(
 )
 
 function validateRule(rule, value, formData) {
+  const ruleName = typeof rule === 'string' ? rule : rule.name
+
   switch (rule.name) {
   case 'EmailRule':
     return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)
@@ -140,8 +142,9 @@ form.addEventListener('submit', (event) => {
       }
 
       if (!message && configuration && value !== '') {
-        const failedRule = configuration.validationRules.find(
-          rule => !validateRule(rule, String(value), formData)
+        const failedRule = configuration.validationRules
+        .map(rule => typeof rule === 'string' ? { name: rule } : rule)
+        .find(rule => !validateRule(rule, String (value), formData)
         )
 
         if (failedRule) {

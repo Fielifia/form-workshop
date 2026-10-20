@@ -20,6 +20,18 @@ exportButton.addEventListener('click', () => {
     const fields = formModel.getFields()
     const html = generateHTML(fields)
 
+    console.log(
+      html.slice(
+        html.indexOf("case 'OnlyLettersRule':"),
+        html.indexOf("case 'OnlyDigitsRule':")
+      )
+    )
+
+    console.log(
+      'Generated rules:',
+      html.match(/"validationRules":\[[^\]]*\]/g)
+    )
+
     const blob = new Blob([html], {
       type: 'text/html;charset=utf-8'
     })
@@ -28,7 +40,7 @@ exportButton.addEventListener('click', () => {
     const link = document.createElement('a')
 
     link.href = url
-    link.download = 'form-html'
+    link.download = 'form.html'
 
     document.body.append(link)
     link.click()
