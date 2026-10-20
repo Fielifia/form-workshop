@@ -685,34 +685,56 @@ export function createFieldEditor(
     } else {
       const list = document.createElement('ul')
 
-      fields.forEach(field => {
-        const item = document.createElement('li')
 
-        item.append(
-          createLabelInput(field),
-          createTypeSelect(field),
-          createRequiredCheckbox(field),
-          createRemoveButton(field),
-        )
+fields.forEach(field => {
+  const item = document.createElement('li')
 
-        if (field.type === 'password') {
-          item.append(createPasswordRequirements())
-        }
+  const matchingRule = field.validationRules.find(
+    rule => typeof rule === 'object' &&
+      rule.name === 'MatchingFieldsRule'
+  )
 
-        const parameterizedValidationRules = createParameterizedValidationRules(field)
+  const isMatchingField = Boolean(matchingRule)
 
-        if (parameterizedValidationRules) {
-          item.append(parameterizedValidationRules)
-        }
+  item.append(
+    createLabelInput(field)
+  )
 
-        const validationRules = createValidationRules(field)
+  if (!isMatchingField) {
+    item.append(
+      createTypeSelect(field),
+      createRequiredCheckbox(field)
+    )
+  }
 
-        if (validationRules) {
-          item.append(validationRules)
-        }
+  item.append(createRemoveButton(field))
 
-        list.append(item)
-      })
+  if (!isMatchingField && field.type === 'password') {
+    item.append(createPasswordRequirements())
+  }
+
+  if (isMatchingField) {
+    item.append(
+      createMatchingFieldsSelect(field, matchingRule)
+    )
+  } else {
+    const parameterizedValidationRules =
+      createParameterizedValidationRules(field)
+
+    if (parameterizedValidationRules) {
+      item.append(parameterizedValidationRules)
+    }
+
+    const validationRules = createValidationRules(field)
+
+    if (validationRules) {
+      item.append(validationRules)
+    }
+  }
+
+  list.append(item)
+})
+
 
       editor.append(list)
     }
