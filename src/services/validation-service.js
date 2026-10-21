@@ -11,8 +11,8 @@ import {
   RequiredRule,
   SpecialCharacterRule,
   UppercaseRule,
-} from 'laboration-2/src/Rule.js'
-import Validation from 'laboration-2/src/Validation.js'
+} from '../../../form-validation/src/Rule.js'
+import Validation from '../../../form-validation/src/Validation.js'
 
 const RULE_FACTORIES = {
   RequiredRule: () => new RequiredRule(),
