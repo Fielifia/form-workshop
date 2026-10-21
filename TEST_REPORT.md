@@ -40,7 +40,9 @@ One of the more challenging aspects was verifying the exported HTML, since its v
 | Verify modular structure | QR-05 | Review the application structure and module responsibilities. | Application logic is separated into modules with clear responsibilities. | Reviewed |
 | Verify documentation | QR-06 | Review the README and supporting documentation. | Setup, usage, testing, limitations, and third-party licenses are documented. | Reviewed |
 
+The test cases marked as **Passed** were verified through automated tests and/or tests described in the summary. The test marked as **Reviewed** were accessed through manual code or documentation review rather than automated execution.
+
 
 ## Known Issues in Third-Party Modules
 
-None found.
+No known issues affecting the application's tested functionality were identified during integration and testing. This does not constitute a comprehensive audit of the third-party module.
