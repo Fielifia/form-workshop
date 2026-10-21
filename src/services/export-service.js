@@ -272,105 +272,182 @@ export function generateHTML(fields) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Exported Form</title>
   <style>
-    :root {
-      font-family: Arial, Helvetica, sans-serif;
-      color: #242424;
-      background: #f5f6f8;
-    }
 
-    * {
-      box-sizing: border-box;
-    }
+  :root {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #242424;
+    background: #f5f6f8;
+  }
 
-    body {
-      margin: 0;
-      min-width: 320px;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
+  body {
+    margin: 0;
+    min-width: 320px;
+  }
+
+  main {
+    width: min(100% - 2rem, 960px);
+    margin: 2rem auto;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: #fff;
+    border: 1px solid #e0e5ed;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgb(32 41 56 / 4%);
+  }
+
+  h1 {
+    margin-top: 0;
+    color: #2a3a4d;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+  }
+
+  form,
+  .preview-field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  form {
+    gap: 1.25rem;
+  }
+
+  .preview-field {
+    gap: .4rem;
+    min-width: 0;
+  }
+
+  .preview-field > label {
+    color: #35465d;
+    font-weight: 600;
+  }
+
+  input:not([type="checkbox"]),
+  textarea,
+  select {
+    width: 100%;
+    max-width: 450px;
+    padding: .65rem;
+    border: 1px solid #b8c4d4;
+    border-radius: 6px;
+    font: inherit;
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  input[type="checkbox"] {
+    accent-color: #2a3a4d;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible {
+    outline: 3px solid #6b8fc4;
+    outline-offset: 3px;
+  }
+
+  [aria-invalid="true"] {
+    border-color: #a12626;
+  }
+
+  button {
+    width: fit-content;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: 6px;
+    background: #2a3a4d;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #3c526e;
+  }
+
+  .field-requirements {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .4rem .75rem;
+    min-width: 0;
+    margin: .25rem 0 0;
+    padding: .6rem .8rem .75rem;
+    border: 1px solid #d8dee7;
+    border-radius: 6px;
+    background: #f8f9fb;
+  }
+
+  .field-requirements legend {
+    color: #35465d;
+    font-size: .9rem;
+    font-weight: 600;
+  }
+
+  .field-requirements p {
+    display: flex;
+    min-width: 0;
+    margin: 0;
+    font-size: .85rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .field-requirements p::before {
+    flex: 0 0 .6rem;
+    content: "• ";
+  }
+
+  .field-error,
+  .validation-error {
+    color: #a12626;
+  }
+
+  .field-error {
+    margin: 0;
+    font-size: .9rem;
+  }
+
+  .validation-success {
+    color: #18794e;
+  }
+
+  #validation-feedback {
+    font-weight: 600;
+  }
+
+  .notice {
+    margin-top: 1.5rem;
+    color: #424b57;
+    font-size: .9rem;
+  }
+
+  @media (max-width: 600px) {
     main {
-      width: min(100% - 2rem, 960px);
-      margin: 2rem auto;
-      padding: 2rem;
-      background: #fff;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .preview-field {
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
-    }
-
-    input:not([type="checkbox"]),
-    textarea {
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 450px;
-      padding: .65rem;
-      font: inherit;
-    }
-
-    button {
-      width: fit-content;
-      padding: .75rem 1rem;
-      border: 0;
-      border-radius: 6px;
-      background: #2a3a4d;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    .field-error,
-    .validation-error {
-      color: #a12626;
-    }
-
-    .validation-success {
-      color: #18794e;
-    }
-
-    .field-error {
-      margin: 0;
-      font-size: .9rem;
-    }
-
-    .notice {
-      margin-top: 1.5rem;
-      color: #424b57;
-      font-size: .9rem;
+      margin: 1rem auto;
+      padding: 1.25rem;
     }
 
     .field-requirements {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: .4rem .75rem;
-      margin: 0;
-      padding: .6rem .8rem .75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 400px) {
+    .field-requirements {
+      grid-template-columns: 1fr;
     }
 
-    .field-requirements legend {
-      font-size: .9rem;
+    button {
+      width: 100%;
     }
+  }
 
-    .field-requirements p {
-      display: flex;
-      min-width: 0;
-      margin: 0;
-      font-size: .85rem;
-      line-height: 1.3;
-      overflow-wrap: anywhere;
-    }
-
-    .field-requirements p::before {
-      flex: 0 0 .6rem;
-      content: "• ";
-    }
   </style>
 </head>
 <body>

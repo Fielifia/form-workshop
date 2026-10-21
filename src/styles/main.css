@@ -30,9 +30,10 @@ body {
 
 .app-header h1 {
   margin: 0 0 .5rem;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
 }
 
-.app-header p {
+.p {
   margin: 0;
 }
 
@@ -40,10 +41,14 @@ body {
 
 .welcome,
 .form-editor,
-.form-preview {
+.form-preview,
+.form-export {
   margin: 1rem 0 2rem;
-  padding: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
   background: #fff;
+  border: 1px solid #e0e5ed;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgb(32 41 56 / 4%);
 }
 
 .welcome {
@@ -51,8 +56,10 @@ body {
 }
 
 .form-editor h2,
-.form-preview h2 {
+.form-preview h2,
+.form-export h2 {
   margin-top: 0;
+  font-size: 1.35rem;
 }
 
 /* ===== BUTTONS ===== */
@@ -65,10 +72,19 @@ button {
   color: #fff;
   font: inherit;
   cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 button:hover {
   background: #3c526e;
+  box-shadow: 0 3px 8px rgb(30 45 65 / 14%);
+}
+
+button:active {
+  transform: translateY(.5px);
 }
 
 button:focus-visible {
@@ -77,11 +93,6 @@ button:focus-visible {
 }
 
 /* ===== STATUS AND ERRORS ===== */
-
-#status-message {
-  margin-top: 1rem;
-  font-weight: bold;
-}
 
 [role="alert"] {
   color: #a12626;
@@ -122,6 +133,10 @@ button:focus-visible {
   border: 1px solid #d8dee7;
   border-radius: 8px;
   background: #fff;
+}
+
+#field-editor li:focus-within {
+  border-color: #8da8d0;
 }
 
 #field-editor li input,
@@ -166,6 +181,8 @@ button:focus-visible {
 
 #field-editor li fieldset legend {
   padding: 0 .4rem;
+  font-weight: 600;
+  color: #35465d;
 }
 
 #field-editor li fieldset label {
@@ -177,6 +194,16 @@ button:focus-visible {
 
 #field-editor li fieldset input[type="checkbox"] {
   flex-shrink: 0;
+}
+
+#field-editor input:focus,
+#field-editor select:focus,
+#form-preview input:focus,
+#form-preview textarea:focus,
+#form-preview select:focus {
+  border-color: #6485b7;
+  box-shadow: 0 0 0 3px rgb(100 133 183 / 16%);
+  outline: none;
 }
 
 #field-editor li input:focus-visible,
@@ -197,6 +224,11 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   gap: .4rem;
+}
+
+#form-preview .preview-field>label {
+  font-weight: 600;
+  color: #35465d;
 }
 
 #form-preview input:not([type="checkbox"]),
@@ -278,9 +310,16 @@ button:focus-visible {
   padding: .6rem .8rem .75rem;
 }
 
+#form-preview .field-requirements {
+  background: #f8f9fb;
+  border-radius: 6px;
+}
+
 #field-editor .password-requirements legend,
 .field-requirements legend {
+  color: #35465d;
   font-size: .9rem;
+  font-weight: 600;
 }
 
 #field-editor .password-requirements p,
@@ -305,7 +344,8 @@ button:focus-visible {
 
   .welcome,
   .form-editor,
-  .form-preview {
+  .form-preview,
+  .form-export {
     padding: 1.25rem;
   }
 
@@ -336,5 +376,18 @@ button:focus-visible {
   #field-editor .password-requirements,
   .field-requirements {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
