@@ -5,7 +5,7 @@ const validator = new PasswordValidator()
 /**
  * Validates a password and returns its strength and suggestions.
  *
- * @param {*} password . The password to evaluate.
+ * @param {*} password - The password to evaluate.
  * @returns {object} The validation result.
  */
 export function evaluatePassword(password) {

@@ -1,5 +1,6 @@
 import { validateForm } from '../services/validation-service.js'
 import { evaluatePassword } from '../services/password-service.js'
+import { getFieldRequirements } from '../services/requirement-service.js'
 
 /**
  * Creates an input element for a configured field.
@@ -42,6 +43,35 @@ function createLabel(field) {
   }
 
   return label
+}
+
+/**
+ * Creates a list of field requirements.
+ * 
+ * @param {object} field - The configured form field.
+ * @returns {HTMLListElement|null} The requirement list.
+ */
+function createRequirementList(field, fields) {
+  const requirements = getFieldRequirements(field, fields)
+
+  if (requirements.length === 0) {
+    return null
+  }
+
+  const fieldset = document.createElement('fieldset')
+  fieldset.className = 'field-requirements'
+
+  const legend = document.createElement('legend')
+  legend.textContent = 'Requirements'
+  fieldset.append(legend)
+
+  requirements.forEach(requirement => {
+    const paragraph = document.createElement('p')
+    paragraph.textContent = requirement
+    fieldset.append(paragraph)
+  })
+
+  return fieldset
 }
 
 /**
@@ -236,12 +266,19 @@ export function createFormPreview(formModel) {
 
       const label = createLabel(field)
       const input = createInput(field)
+      const requirementList = createRequirementList(field, fields)
       const error = createErrorElement(field)
 
       input.setAttribute('aria-describedby', error.id)
       errorElements.set(field.id, error)
 
-      group.append(label, input, error)
+      group.append(label, input)
+
+      if (requirementList) {
+        group.append(requirementList)
+      }
+
+      group.append(error)
 
       if (field.type === 'password') {
         setupPasswordFeedback(input, group)
@@ -277,13 +314,13 @@ export function createFormPreview(formModel) {
         result.errors
       )
 
+      feedback.className = result.valid
+        ? 'validation-feedback validation-success'
+        : 'validation-feedback validation-error'
+
       feedback.textContent = result.valid
         ? 'The form is valid'
         : 'Please correct the errors above.'
-
-      feedback.className = result.valid
-        ? 'validation-success'
-        : 'validation-error'
     })
 
     preview.append(form)

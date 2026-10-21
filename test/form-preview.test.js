@@ -126,7 +126,7 @@ test('rejects a weak password when submitting the form', () => {
 
   assert.equal(input.getAttribute('aria-invalid'), 'true')
   assert.equal(
-    preview.querySelector('form > div[aria-live="polite"]:last-child').textContent,
+    preview.querySelector('.validation-feedback').textContent,
     'Please correct the errors above.')
 })
 
@@ -153,7 +153,7 @@ test('accepts a strong password when submitting the form', () => {
 
   assert.equal(input.hasAttribute('aria-invalid'), false)
   assert.equal(
-    preview.querySelector('form > div[aria-live="polite"]:last-child').textContent,
+    preview.querySelector('.validation-feedback').textContent,
     'The form is valid')
 })
 
@@ -180,7 +180,7 @@ test('continues to accept valid text fields', () => {
 
   assert.equal(input.hasAttribute('aria-invalid'), false)
   assert.equal(
-    preview.querySelector('form > div[aria-live="polite"]:last-child').textContent,
+    preview.querySelector('.validation-feedback').textContent,
     'The form is valid')
 })
 

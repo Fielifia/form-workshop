@@ -11,8 +11,8 @@ import {
   RequiredRule,
   SpecialCharacterRule,
   UppercaseRule,
-} from 'laboration-2/src/Rule.js'
-import Validation from 'laboration-2/src/Validation.js'
+} from '../../../form-validation/src/Rule.js'
+import Validation from '../../../form-validation/src/Validation.js'
 
 const RULE_FACTORIES = {
   RequiredRule: () => new RequiredRule(),
@@ -105,6 +105,12 @@ function createValidation(fields) {
 
       field.addRule(createRule(configuredRule))
     })
+
+    if (config.matchingFieldId) {
+      field.addRule(
+        new MatchingFieldsRule(config.matchingFieldId)
+      )
+    }
 
     validation.addField(field)
   })
