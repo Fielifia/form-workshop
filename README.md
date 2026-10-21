@@ -6,6 +6,27 @@ Form Workshop is a web application for creating, configuring, validating, previe
 
 Make it easy for users to create and test custom HTML forms and export them as standalone files that work independently of the application.
 
+## Requirements
+
+### Functional Requirements
+
+- **FR-01 – Field management:** The application shall allow users to add and remove form fields. Field identifiers shall be unique.
+- **FR-02 – Field configuration:** The application shall allow users to configure field labels, input types, and validation rules.
+- **FR-03 – Field validation:** The application shall validate field values using the configured rules and distinguish between valid and invalid input.
+- **FR-04 – Password validation:** The application shall evaluate passwords using the password validation module and provide relevant feedback.
+- **FR-05 – Form preview:** The application shall provide a preview where users can test the form and view validation results.
+- **FR-06 – HTML export:** The application shall export a standalone HTML document containing the form markup, styling, and client-side validation.
+- **FR-07 – Independent operation:** The exported form shall work in a browser without requiring the original application, a server, or a network connection.
+
+### Quality Requirements
+
+- **QR-01 – Clear feedback:** Validation errors shall be clear and associated with the relevant fields.
+- **QR-02 – Automated testing:** Automated tests shall cover the application's configuration, validation, and export functionality.
+- **QR-03 – Validation consistency:** The preview and exported form shall produce equivalent validation results for equivalent inputs.
+- **QR-04 – Offline operation:** The exported form shall work independently and offline.
+- **QR-05 – Maintainability:** The application shall use a modular structure with clear responsibilities.
+- **QR-06 – Documentation:** The project documentation shall describe setup, usage, testing, limitations, and third-party licenses.
+
 ## Features
 
 - Create and remove form fields.
