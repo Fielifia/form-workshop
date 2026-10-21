@@ -151,3 +151,9 @@ Password validation are provided by the integrated password module. The applicat
 ## Course context
 
 Form Workshop is developed as a part of the 1DV610 course. The project demonstrates how reusable modules can be integrated into an application while keeping the application and modules as separate projects.
+
+## License
+
+- **Form Workshop**: MIT — see [`package.json`](./package.json).
+- **Form Validation Module**: ISC — see the [form-validation repository](https://github.com/Fielifia/form-validation).
+- **Password Module**: MIT — see the [password-module repository](https://github.com/hanmar31/password-module).
