@@ -1,4 +1,4 @@
-import Field from 'laboration-2/src/Field.js'
+import Field from '../../../form-validation/src/Field.js'
 import {
   EmailRule,
   LowercaseRule,
